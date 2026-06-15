@@ -1,0 +1,91 @@
+import { Conversation, IConversation } from '../models';
+import { Message, IMessage } from '../models';
+
+export class ConversationRepository {
+  async create(participants: string[]): Promise<IConversation> {
+    const conversation = await Conversation.create({ participants });
+    return conversation.populate('participants', 'name email profileImage');
+  }
+
+  async findById(id: string): Promise<IConversation | null> {
+    return Conversation.findById(id).populate(
+      'participants',
+      'name email profileImage'
+    );
+  }
+
+  async findByParticipants(userId1: string, userId2: string): Promise<IConversation | null> {
+    return Conversation.findOne({
+      participants: { $all: [userId1, userId2], $size: 2 },
+    }).populate('participants', 'name email profileImage');
+  }
+
+  async findByUserId(
+    userId: string,
+    page: number,
+    limit: number
+  ): Promise<{ conversations: IConversation[]; total: number }> {
+    const skip = (page - 1) * limit;
+    const filter = { participants: userId };
+
+    const [conversations, total] = await Promise.all([
+      Conversation.find(filter)
+        .populate('participants', 'name email profileImage')
+        .populate('lastMessage')
+        .skip(skip)
+        .limit(limit)
+        .sort({ lastMessageAt: -1 }),
+      Conversation.countDocuments(filter),
+    ]);
+
+    return { conversations, total };
+  }
+
+  async updateLastMessage(
+    conversationId: string,
+    messageId: string
+  ): Promise<void> {
+    await Conversation.findByIdAndUpdate(conversationId, {
+      lastMessage: messageId,
+      lastMessageAt: new Date(),
+    });
+  }
+}
+
+export class MessageRepository {
+  async create(data: Partial<IMessage>): Promise<IMessage> {
+    const message = await Message.create(data);
+    return message.populate('sender', 'name email profileImage');
+  }
+
+  async findByConversationId(
+    conversationId: string,
+    page: number,
+    limit: number
+  ): Promise<{ messages: IMessage[]; total: number }> {
+    const skip = (page - 1) * limit;
+    const [messages, total] = await Promise.all([
+      Message.find({ conversationId })
+        .populate('sender', 'name email profileImage')
+        .skip(skip)
+        .limit(limit)
+        .sort({ createdAt: -1 }),
+      Message.countDocuments({ conversationId }),
+    ]);
+    return { messages, total };
+  }
+
+  async markAsSeen(conversationId: string, userId: string): Promise<void> {
+    await Message.updateMany(
+      {
+        conversationId,
+        sender: { $ne: userId },
+        seen: false,
+      },
+      { seen: true, seenAt: new Date() }
+    );
+  }
+}
+
+export const conversationRepository = new ConversationRepository();
+export const messageRepository = new MessageRepository();
