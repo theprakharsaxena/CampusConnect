@@ -53,19 +53,19 @@ export class PostRepository {
       postId,
       { $addToSet: { likedBy: userId }, $inc: { likesCount: 1 } },
       { new: true }
-    );
+    ).populate('author', 'name email profileImage role department');
   }
 
   async unlikePost(postId: string, userId: string): Promise<IPost | null> {
     const post = await Post.findById(postId);
     if (!post || !post.likedBy.some((id) => id.toString() === userId)) {
-      return post;
+      return post.populate('author', 'name email profileImage role department');
     }
     return Post.findByIdAndUpdate(
       postId,
       { $pull: { likedBy: userId }, $inc: { likesCount: -1 } },
       { new: true }
-    );
+    ).populate('author', 'name email profileImage role department');
   }
 
   async isLikedByUser(postId: string, userId: string): Promise<boolean> {
