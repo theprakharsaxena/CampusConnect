@@ -3,12 +3,29 @@ import { AppError, buildPagination } from '../utils/response';
 import { IUser } from '../models';
 import { UserFilterQuery } from '../types';
 import { uploadToCloudinary } from '../utils/cloudinary';
+import {
+  assertCanActivateUser,
+  assertCanManageUser,
+  isManagementRole,
+} from '../utils/permissions';
 
 const sanitizeUser = (user: IUser): Partial<IUser> => {
   const obj = user.toObject();
   delete obj.password;
   return obj;
 };
+
+const MANAGER_EDITABLE_FIELDS = [
+  'name',
+  'department',
+  'batch',
+  'bio',
+  'company',
+  'designation',
+  'skills',
+  'linkedinUrl',
+  'githubUrl',
+] as const;
 
 export class UserService {
   async getUserById(id: string): Promise<Partial<IUser>> {
@@ -29,6 +46,7 @@ export class UserService {
     delete updateData.email;
     delete updateData.role;
     delete updateData.isBlocked;
+    delete updateData.isActive;
 
     if (imageBuffer) {
       const { url } = await uploadToCloudinary(imageBuffer, 'campusconnect/profiles');
@@ -50,6 +68,107 @@ export class UserService {
       users: users.map(sanitizeUser),
       pagination: buildPagination(page, limit, total),
     };
+  }
+}
+
+export class UserManagementService {
+  private async getActor(actorId: string): Promise<IUser> {
+    const actor = await userRepository.findById(actorId);
+    if (!actor) throw new AppError('User not found', 404);
+    if (!isManagementRole(actor.role)) {
+      throw new AppError('Insufficient permissions', 403);
+    }
+    return actor;
+  }
+
+  private async getTarget(targetId: string): Promise<IUser> {
+    const target = await userRepository.findById(targetId);
+    if (!target) throw new AppError('User not found', 404);
+    return target;
+  }
+
+  async getManageableUsers(
+    actorId: string,
+    page: number,
+    limit: number,
+    isActive?: boolean
+  ) {
+    const actor = await this.getActor(actorId);
+    const { users, total } = await userRepository.findManageableByRole(actor.role, {
+      isActive,
+      page,
+      limit,
+    });
+    return {
+      users: users.map(sanitizeUser),
+      pagination: buildPagination(page, limit, total),
+    };
+  }
+
+  async getPendingUsers(actorId: string, page: number, limit: number) {
+    return this.getManageableUsers(actorId, page, limit, false);
+  }
+
+  async updateUser(
+    actorId: string,
+    targetId: string,
+    data: Partial<IUser>
+  ): Promise<Partial<IUser>> {
+    const actor = await this.getActor(actorId);
+    const target = await this.getTarget(targetId);
+    assertCanManageUser(actor, target);
+
+    const updateData: Partial<IUser> = {};
+    for (const field of MANAGER_EDITABLE_FIELDS) {
+      if (data[field] !== undefined) {
+        (updateData as Record<string, unknown>)[field] = data[field];
+      }
+    }
+
+    if (actor.role === 'admin' && data.role) {
+      updateData.role = data.role;
+    }
+
+    const updated = await userRepository.update(targetId, updateData);
+    if (!updated) throw new AppError('User not found', 404);
+    return sanitizeUser(updated);
+  }
+
+  async deleteUser(actorId: string, targetId: string): Promise<void> {
+    const actor = await this.getActor(actorId);
+    const target = await this.getTarget(targetId);
+    assertCanManageUser(actor, target);
+
+    const deleted = await userRepository.delete(targetId);
+    if (!deleted) throw new AppError('User not found', 404);
+  }
+
+  async activateUser(actorId: string, targetId: string): Promise<Partial<IUser>> {
+    const actor = await this.getActor(actorId);
+    const target = await this.getTarget(targetId);
+    assertCanActivateUser(actor, target);
+
+    if (target.isActive) {
+      throw new AppError('User is already active', 400);
+    }
+
+    const updated = await userRepository.update(targetId, { isActive: true });
+    if (!updated) throw new AppError('User not found', 404);
+    return sanitizeUser(updated);
+  }
+
+  async deactivateUser(actorId: string, targetId: string): Promise<Partial<IUser>> {
+    const actor = await this.getActor(actorId);
+    const target = await this.getTarget(targetId);
+    assertCanActivateUser(actor, target);
+
+    if (!target.isActive) {
+      throw new AppError('User is already inactive', 400);
+    }
+
+    const updated = await userRepository.update(targetId, { isActive: false });
+    if (!updated) throw new AppError('User not found', 404);
+    return sanitizeUser(updated);
   }
 }
 
@@ -89,6 +208,9 @@ export class AdminService {
       totalOpportunities,
       totalEvents,
       blockedUsers,
+      inactiveUsers,
+      pendingStudents,
+      pendingTeachers,
     ] = await Promise.all([
       userRepository.countDocuments(),
       userRepository.countDocuments({ role: 'student' }),
@@ -98,6 +220,9 @@ export class AdminService {
       (await import('../repositories/opportunity.repository')).opportunityRepository.countDocuments(),
       (await import('../repositories/event.repository')).eventRepository.countDocuments(),
       userRepository.countDocuments({ isBlocked: true }),
+      userRepository.countDocuments({ isActive: false }),
+      userRepository.countDocuments({ role: 'student', isActive: false }),
+      userRepository.countDocuments({ role: 'teacher', isActive: false }),
     ]);
 
     return {
@@ -107,6 +232,9 @@ export class AdminService {
         teachers: totalTeachers,
         alumni: totalAlumni,
         blocked: blockedUsers,
+        inactive: inactiveUsers,
+        pendingStudents,
+        pendingTeachers,
       },
       content: {
         posts: totalPosts,
@@ -118,4 +246,5 @@ export class AdminService {
 }
 
 export const userService = new UserService();
+export const userManagementService = new UserManagementService();
 export const adminService = new AdminService();

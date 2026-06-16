@@ -17,6 +17,7 @@ export interface IUser extends Document {
   designation?: string;
   skills: string[];
   isVerified: boolean;
+  isActive: boolean;
   isBlocked: boolean;
   refreshToken?: string;
   passwordResetToken?: string;
@@ -51,6 +52,7 @@ const userSchema = new Schema<IUser>(
     designation: { type: String, trim: true },
     skills: [{ type: String, trim: true }],
     isVerified: { type: Boolean, default: false },
+    isActive: { type: Boolean, default: false },
     isBlocked: { type: Boolean, default: false },
     refreshToken: { type: String, select: false },
     passwordResetToken: { type: String, select: false },
@@ -61,6 +63,7 @@ const userSchema = new Schema<IUser>(
 
 userSchema.index({ email: 1 });
 userSchema.index({ role: 1 });
+userSchema.index({ isActive: 1 });
 userSchema.index({ department: 1 });
 userSchema.index({ batch: 1 });
 userSchema.index({ skills: 1 });

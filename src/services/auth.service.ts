@@ -11,6 +11,7 @@ import { UserRole } from '../types';
 import crypto from 'crypto';
 import { config } from '../config';
 import { sendVerificationEmail } from '../utils/mailer';
+import { getDefaultIsActiveForRole } from '../utils/permissions';
 
 interface RegisterInput {
   name: string;
@@ -94,13 +95,15 @@ export class AuthService {
       );
     }
 
+    const role = input.role || 'student';
     const hashedPassword = await hashPassword(input.password);
     const user = await userRepository.create({
       ...input,
       email: normalizedEmail,
       password: hashedPassword,
-      role: input.role || 'student',
+      role,
       isVerified: true,
+      isActive: getDefaultIsActiveForRole(role),
     });
 
     const tokens = this.generateTokens(user);

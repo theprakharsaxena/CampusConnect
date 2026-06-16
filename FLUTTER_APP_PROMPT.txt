@@ -75,6 +75,12 @@ TOKEN STRATEGY:
 
 PASSWORD RULES: minimum 8 characters (register, reset, change)
 
+ACCOUNT STATUS & ACTIVE REQUIREMENT:
+  - Users have an `isActive` boolean (admins default to true; students, teachers, HODs, alumni default to false upon registration).
+  - While inactive (`isActive: false`), the user can log in, view/edit their own profile, search users, and view feeds/posts/comments.
+  - However, any interactive/mutating requests (creating posts/comments/opportunities/events, RSVPing, sending/receiving messages, or connection requests) will return a 403 Forbidden with the error message: "Your account is inactive. You can view content and edit your profile only until approved."
+  - The mobile app must gracefully handle this 403 error (e.g. show an inline warning or alert banner asking them to await activation from an Admin, HOD, or Teacher).
+
 DEMO CREDENTIALS (for testing):
   Admin:   admin@campusconnect.edu / Admin@12345
   Student: alice.williams@student.campusconnect.edu / Student@123
@@ -111,7 +117,7 @@ Use infinite scroll: load page 1, on scroll end load page+1 until page >= totalP
 USER:
   _id, name, email, role (student|teacher|hod|alumni|admin),
   department?, batch?, bio?, profileImage?, linkedinUrl?, githubUrl?,
-  company?, designation?, skills[], isVerified, isBlocked?, createdAt, updatedAt
+  company?, designation?, skills[], isVerified, isActive, isBlocked?, createdAt, updatedAt
 
 POST:
   _id, author (User summary), content, images[], tags[],
@@ -305,7 +311,7 @@ SCREEN 4: RegisterScreen
   - Fields: name, email, password, confirm password, role (dropdown),
     department, batch (show batch for student/alumni, designation for alumni)
   - API: POST /auth/register
-  - On success: auto-login → MainShell
+  - On success: auto-login → MainShell (Note: User will be registered as inactive (isActive: false) by default unless registering as admin. Show a notification banner/message indicating that their account is pending approval by the college administration).
 
 SCREEN 5: ForgotPasswordScreen
   - Field: email
@@ -548,26 +554,36 @@ SCREEN 33: CreateMenuScreen (bottom sheet or dedicated tab)
   - Role-based labels (e.g. alumni can post referrals)
 
 --------------------------------------------------------------------------------
-ADMIN (3 screens) — lib/features/admin/ (only if user.role == admin)
+ADMIN & USER MANAGEMENT (4 screens) — lib/features/admin/ + lib/features/users/
 --------------------------------------------------------------------------------
 
-SCREEN 34: AdminDashboardScreen
+SCREEN 34: AdminDashboardScreen (only if user.role == admin)
   - API: GET /admin/analytics
-  - Cards: total users, students, teachers, alumni, blocked, posts, opportunities, events
+  - Cards: total users, students, teachers, alumni, blocked, inactive, pendingStudents, pendingTeachers, posts, opportunities, events
   - Links: Manage Users, Moderation
 
-SCREEN 35: AdminUsersScreen
-  - API: GET /admin/users?page&limit
-  - Each row: name, email, role, blocked status
-  - Actions: Block, Unblock, Delete
-  - APIs: PUT /admin/users/:id/block, unblock, DELETE /admin/users/:id
+SCREEN 35: ManageUsersScreen (Accessible to admin, hod, teacher)
+  - API: GET /users/manage/list?page&limit&isActive and GET /users/manage/pending?page&limit
+  - List manageable users based on role permissions:
+    - admin can manage: student, teacher, hod, alumni, admin
+    - hod can manage: student, teacher, alumni
+    - teacher can manage: student, alumni
+  - Toggles/tabs: "All Manageable" and "Pending Approval" (isActive = false)
+  - Search/filter manageable users.
+  - Actions: 
+    - Activate: PUT /users/manage/:id/activate
+    - Deactivate: PUT /users/manage/:id/deactivate
+    - Edit fields: PUT /users/manage/:id (name, bio, department, batch, company, designation, skills, role [role is admin-editable only])
+    - Delete user: DELETE /users/manage/:id
 
-SCREEN 35b: AdminModerationScreen
+SCREEN 35b: AdminModerationScreen (only if user.role == admin)
   - Delete posts: DELETE /admin/posts/:id
   - Delete opportunities: DELETE /admin/opportunities/:id
   - (Provide post/opportunity ID input or browse from reports — use search/list)
 
-Admin entry point: show "Admin Panel" tile on ProfileTab only when role == admin
+Management entry points:
+  - Show "Admin Panel" tile on ProfileTab only when role == admin
+  - Show "Manage Users" tile on ProfileTab when role == admin, hod, or teacher
 
 ================================================================================
 10. NAVIGATION MAP (go_router)
@@ -603,8 +619,10 @@ Routes:
   /messages
   /messages/:conversationId
   /admin
-  /admin/users
   /admin/moderation
+  /users/manage/list
+  /users/manage/pending
+  /users/manage/:id
 
 Auth guard: redirect to /login if no valid token on protected routes.
 
@@ -787,6 +805,8 @@ Phase 5 — Polish:
 [ ] Notifications list shows with unread badge and deep linking works
 [ ] User can edit profile with photo upload
 [ ] User can change password
+[ ] Newly registered users (except admins) default to inactive (isActive: false) and receive 403 status message for mutative requests until active
+[ ] Admin, HOD, and Teacher can manage users (view list, view pending, edit details, delete, and activate/deactivate users) according to the role hierarchy
 [ ] Admin can view analytics, block/unblock/delete users, delete posts/opportunities
 [ ] All lists paginate with infinite scroll
 [ ] App handles errors gracefully

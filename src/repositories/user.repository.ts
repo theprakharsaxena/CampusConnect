@@ -1,6 +1,7 @@
 import { FilterQuery, UpdateQuery } from 'mongoose';
 import { User, IUser } from '../models';
-import { UserFilterQuery } from '../types';
+import { UserFilterQuery, UserRole } from '../types';
+import { MANAGEABLE_ROLES } from '../utils/permissions';
 
 export class UserRepository {
   async create(data: Partial<IUser>): Promise<IUser> {
@@ -64,6 +65,29 @@ export class UserRepository {
       User.countDocuments(),
     ]);
     return { users, total };
+  }
+
+  async findByRoles(
+    roles: UserRole[],
+    filters: { isActive?: boolean; page?: number; limit?: number }
+  ): Promise<{ users: IUser[]; total: number }> {
+    const { isActive, page = 1, limit = 10 } = filters;
+    const query: FilterQuery<IUser> = { role: { $in: roles } };
+    if (isActive !== undefined) query.isActive = isActive;
+
+    const skip = (page - 1) * limit;
+    const [users, total] = await Promise.all([
+      User.find(query).skip(skip).limit(limit).sort({ createdAt: -1 }),
+      User.countDocuments(query),
+    ]);
+    return { users, total };
+  }
+
+  async findManageableByRole(
+    managerRole: UserRole,
+    filters: { isActive?: boolean; page?: number; limit?: number }
+  ): Promise<{ users: IUser[]; total: number }> {
+    return this.findByRoles(MANAGEABLE_ROLES[managerRole], filters);
   }
 
   async countDocuments(filter: FilterQuery<IUser> = {}): Promise<number> {

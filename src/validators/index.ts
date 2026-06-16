@@ -66,6 +66,22 @@ export const updateProfileValidator = [
   body('skills').optional().isArray(),
 ];
 
+export const manageUserValidator = [
+  body('name').optional().trim().notEmpty(),
+  body('bio').optional().isLength({ max: 500 }),
+  body('department').optional().trim(),
+  body('batch').optional().trim(),
+  body('linkedinUrl').optional().isURL(),
+  body('githubUrl').optional().isURL(),
+  body('company').optional().trim(),
+  body('designation').optional().trim(),
+  body('skills').optional().isArray(),
+  body('role')
+    .optional()
+    .isIn(['student', 'teacher', 'hod', 'alumni', 'admin'])
+    .withMessage('Invalid role'),
+];
+
 export const paginationValidator = [
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1, max: 100 }),
