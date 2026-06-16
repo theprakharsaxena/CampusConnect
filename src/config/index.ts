@@ -39,4 +39,7 @@ export const config = {
   passwordReset: {
     expiresIn: parseInt(process.env.PASSWORD_RESET_EXPIRES_IN || '3600000', 10),
   },
+  apiBaseUrl:
+    process.env.API_BASE_URL ||
+    `http://localhost:${parseInt(process.env.PORT || '5000', 10)}/api/${process.env.API_VERSION || 'v1'}`,
 } as const;
