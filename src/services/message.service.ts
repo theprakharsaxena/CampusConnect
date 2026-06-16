@@ -94,7 +94,7 @@ export class MessageService {
       // Skip notification if recipient is already viewing this conversation
       const isRecipientInRoom = isUserInConversationRoom(recipientId, conversationId);
       if (!isRecipientInRoom) {
-        const notification = await notificationRepository.createOrUpdateMessageNotification({
+        await notificationRepository.createOrUpdateMessageNotification({
           userId: recipientId,
           type: 'message',
           title: 'New Message',
