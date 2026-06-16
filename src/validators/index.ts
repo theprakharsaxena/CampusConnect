@@ -100,13 +100,39 @@ export const userSearchValidator = [
 
 export const createPostValidator = [
   body('content').trim().notEmpty().withMessage('Content is required'),
-  body('tags').optional().isArray(),
+  body('tags')
+    .optional()
+    .customSanitizer((value) => {
+      if (typeof value === 'string') {
+        try {
+          return JSON.parse(value);
+        } catch (_) {
+          return value.split(',').map((t: string) => t.trim()).filter(Boolean);
+        }
+      }
+      return value;
+    })
+    .isArray()
+    .withMessage('Tags must be an array'),
 ];
 
 export const updatePostValidator = [
   param('id').isMongoId().withMessage('Invalid post ID'),
   body('content').trim().notEmpty().withMessage('Content is required'),
-  body('tags').optional().isArray(),
+  body('tags')
+    .optional()
+    .customSanitizer((value) => {
+      if (typeof value === 'string') {
+        try {
+          return JSON.parse(value);
+        } catch (_) {
+          return value.split(',').map((t: string) => t.trim()).filter(Boolean);
+        }
+      }
+      return value;
+    })
+    .isArray()
+    .withMessage('Tags must be an array'),
 ];
 
 export const createCommentValidator = [
