@@ -8,7 +8,15 @@ interface AuthenticatedSocket extends Socket {
   userId?: string;
 }
 
+let ioInstance: Server | null = null;
 const onlineUsers = new Map<string, string>(); // userId -> socketId
+
+export const getIO = (): Server => {
+  if (!ioInstance) {
+    throw new Error('Socket.io has not been initialized');
+  }
+  return ioInstance;
+};
 
 export const initializeSocket = (httpServer: HttpServer): Server => {
   const io = new Server(httpServer, {
@@ -18,6 +26,7 @@ export const initializeSocket = (httpServer: HttpServer): Server => {
       credentials: true,
     },
   });
+  ioInstance = io;
 
   io.use((socket: AuthenticatedSocket, next) => {
     try {

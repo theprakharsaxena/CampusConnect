@@ -2,6 +2,7 @@ import { Response, NextFunction } from 'express';
 import { messageService } from '../services/message.service';
 import { AuthRequest } from '../types';
 import { sendSuccess, parsePagination, getParam } from '../utils/response';
+import { getIO } from '../sockets';
 
 export class MessageController {
   createConversation = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
@@ -31,12 +32,21 @@ export class MessageController {
 
   sendMessage = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
+      const convId = getParam(req.params.conversationId);
       const message = await messageService.sendMessage(
-        getParam(req.params.conversationId),
+        convId,
         req.user!.userId,
         req.body.text,
         req.body.attachments
       );
+      
+      try {
+        const io = getIO();
+        io.to(`conversation:${convId}`).emit('new_message', message);
+      } catch (error) {
+        console.error('Failed to emit socket message:', error);
+      }
+
       sendSuccess(res, message, 'Message sent', 201);
     } catch (error) {
       next(error);
