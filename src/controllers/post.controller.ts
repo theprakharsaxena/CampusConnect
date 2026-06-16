@@ -27,6 +27,15 @@ export class PostController {
     }
   };
 
+  getById = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const post = await postService.getPostById(getParam(req.params.id));
+      sendSuccess(res, post);
+    } catch (error) {
+      next(error);
+    }
+  };
+
   update = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       const post = await postService.updatePost(

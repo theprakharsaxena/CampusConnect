@@ -25,6 +25,13 @@ export class PostService {
     });
   }
 
+  async getPostById(postId: string): Promise<IPost> {
+    const post = await postRepository.findById(postId);
+    if (!post) throw new AppError('Post not found', 404);
+    return post;
+  }
+
+
   async updatePost(
     postId: string,
     userId: string,

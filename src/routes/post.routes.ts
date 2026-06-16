@@ -18,6 +18,7 @@ router.use(authenticate);
 router.post('/', requireActive, upload.array('images', 5), createPostValidator, validate, postController.create);
 router.get('/feed', paginationValidator, validate, postController.getFeed);
 router.get('/trending', postController.getTrending);
+router.get('/:id', mongoIdValidator, validate, postController.getById);
 router.put('/:id', requireActive, updatePostValidator, validate, postController.update);
 router.delete('/:id', requireActive, mongoIdValidator, validate, postController.delete);
 router.post('/:id/like', requireActive, mongoIdValidator, validate, postController.like);
