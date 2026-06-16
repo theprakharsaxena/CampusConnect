@@ -5,6 +5,7 @@ import {
 import { notificationRepository } from '../repositories/notification.repository';
 import { AppError, buildPagination } from '../utils/response';
 import { IConversation, IMessage } from '../models';
+import { isUserInConversationRoom } from '../sockets';
 
 export class MessageService {
   async createConversation(
@@ -66,13 +67,18 @@ export class MessageService {
     );
     if (recipient) {
       const recipientId = recipient._id?.toString() || recipient.toString();
-      await notificationRepository.create({
-        userId: recipientId,
-        type: 'message',
-        title: 'New Message',
-        message: text.substring(0, 100),
-        referenceId: conversationId,
-      });
+
+      // Skip notification if recipient is already viewing this conversation
+      const isRecipientInRoom = isUserInConversationRoom(recipientId, conversationId);
+      if (!isRecipientInRoom) {
+        await notificationRepository.createOrUpdateMessageNotification({
+          userId: recipientId,
+          type: 'message',
+          title: 'New Message',
+          message: text.substring(0, 100),
+          referenceId: conversationId,
+        });
+      }
     }
 
     return message;

@@ -117,3 +117,11 @@ export const initializeSocket = (httpServer: HttpServer): Server => {
 };
 
 export const getOnlineUsers = (): string[] => Array.from(onlineUsers.keys());
+
+export const isUserInConversationRoom = (userId: string, conversationId: string): boolean => {
+  if (!ioInstance) return false;
+  const socketId = onlineUsers.get(userId);
+  if (!socketId) return false;
+  const room = ioInstance.sockets.adapter.rooms.get(`conversation:${conversationId}`);
+  return room ? room.has(socketId) : false;
+};

@@ -17,6 +17,34 @@ export class NotificationRepository {
     });
   }
 
+  async createOrUpdateMessageNotification(data: {
+    userId: string;
+    type: NotificationType;
+    title: string;
+    message: string;
+    referenceId: string;
+  }): Promise<INotification> {
+    const existing = await Notification.findOne({
+      userId: new Types.ObjectId(data.userId),
+      type: 'message',
+      referenceId: new Types.ObjectId(data.referenceId),
+      isRead: false,
+    });
+
+    if (existing) {
+      existing.message = data.message;
+      existing.createdAt = new Date();
+      existing.updatedAt = new Date();
+      return existing.save();
+    }
+
+    return Notification.create({
+      ...data,
+      userId: new Types.ObjectId(data.userId),
+      referenceId: new Types.ObjectId(data.referenceId),
+    });
+  }
+
   async findByUserId(
     userId: string,
     page: number,
