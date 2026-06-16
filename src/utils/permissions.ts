@@ -42,9 +42,12 @@ export const assertCanManageUser = (
 };
 
 export const assertCanActivateUser = (
-  actor: Pick<IUser, 'role'>,
+  actor: Pick<IUser, 'role' | 'isActive'>,
   target: Pick<IUser, 'role'>
 ): void => {
+  if (!actor.isActive) {
+    throw new AppError('Your account is inactive. You cannot activate or deactivate other users until your own account is approved.', 403);
+  }
   if (!canActivateRole(actor.role, target.role)) {
     throw new AppError('You do not have permission to activate or deactivate this user', 403);
   }
