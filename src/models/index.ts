@@ -7,3 +7,4 @@ export { Event, IEvent } from './Event.model';
 export { Conversation, IConversation } from './Conversation.model';
 export { Message, IMessage } from './Message.model';
 export { Notification, INotification } from './Notification.model';
+export { EmailVerification, IEmailVerification } from './EmailVerification.model';

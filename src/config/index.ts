@@ -29,6 +29,13 @@ export const config = {
     apiKey: getEnv('CLOUDINARY_API_KEY', ''),
     apiSecret: getEnv('CLOUDINARY_API_SECRET', ''),
   },
+  smtp: {
+    host: getEnv('SMTP_HOST', ''),
+    port: parseInt(process.env.SMTP_PORT || '587', 10),
+    user: getEnv('SMTP_USER', ''),
+    pass: getEnv('SMTP_PASS', ''),
+    from: getEnv('SMTP_FROM', 'no-reply@campusconnect.app'),
+  },
   cors: {
     origin: getEnv('CORS_ORIGIN', 'http://localhost:3000'),
   },
@@ -38,6 +45,12 @@ export const config = {
   },
   passwordReset: {
     expiresIn: parseInt(process.env.PASSWORD_RESET_EXPIRES_IN || '3600000', 10),
+  },
+  emailVerification: {
+    expiresInMs: parseInt(
+      process.env.EMAIL_VERIFICATION_EXPIRES_IN || '600000',
+      10
+    ),
   },
   apiBaseUrl:
     process.env.API_BASE_URL ||

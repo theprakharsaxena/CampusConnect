@@ -19,6 +19,19 @@ export const loginValidator = [
   body('password').notEmpty().withMessage('Password is required'),
 ];
 
+export const sendVerificationCodeValidator = [
+  body('email').isEmail().withMessage('Valid email is required'),
+];
+
+export const verifyEmailCodeValidator = [
+  body('email').isEmail().withMessage('Valid email is required'),
+  body('code')
+    .isLength({ min: 6, max: 6 })
+    .withMessage('Verification code must be 6 digits')
+    .matches(/^\d+$/)
+    .withMessage('Verification code must be numeric'),
+];
+
 export const refreshTokenValidator = [
   body('refreshToken').notEmpty().withMessage('Refresh token is required'),
 ];

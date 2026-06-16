@@ -1,4 +1,54 @@
 export const authPaths = {
+  '/auth/send-verification-code': {
+    post: {
+      tags: ['Auth'],
+      summary: 'Send email verification code before register',
+      security: [],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              required: ['email'],
+              properties: {
+                email: { type: 'string', format: 'email' },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        '200': { description: 'Verification code sent to email' },
+      },
+    },
+  },
+  '/auth/verify-email-code': {
+    post: {
+      tags: ['Auth'],
+      summary: 'Verify email code before register',
+      security: [],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              required: ['email', 'code'],
+              properties: {
+                email: { type: 'string', format: 'email' },
+                code: { type: 'string', example: '123456' },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        '200': { description: 'Email verified successfully' },
+        '400': { description: 'Invalid or expired code' },
+      },
+    },
+  },
   '/auth/register': {
     post: {
       tags: ['Auth'],

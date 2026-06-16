@@ -4,6 +4,33 @@ import { AuthRequest } from '../types';
 import { sendSuccess } from '../utils/response';
 
 export class AuthController {
+  sendVerificationCode = async (
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      await authService.sendEmailVerificationCode(req.body.email);
+      sendSuccess(res, undefined, 'Verification code sent to email');
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  verifyEmailCode = async (
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const { email, code } = req.body;
+      await authService.verifyEmailCode(email, code);
+      sendSuccess(res, undefined, 'Email verified successfully');
+    } catch (error) {
+      next(error);
+    }
+  };
+
   register = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       const result = await authService.register(req.body);

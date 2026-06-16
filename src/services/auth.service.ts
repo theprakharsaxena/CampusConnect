@@ -6,9 +6,11 @@ import {
   verifyRefreshToken,
 } from '../utils/jwt';
 import { AppError } from '../utils/response';
-import { IUser } from '../models';
+import { EmailVerification, IUser } from '../models';
 import { UserRole } from '../types';
 import crypto from 'crypto';
+import { config } from '../config';
+import { sendVerificationEmail } from '../utils/mailer';
 
 interface RegisterInput {
   name: string;
@@ -35,23 +37,77 @@ const sanitizeUser = (user: IUser): Partial<IUser> => {
 };
 
 export class AuthService {
+  async sendEmailVerificationCode(email: string): Promise<void> {
+    const normalizedEmail = email.toLowerCase();
+    const existing = await userRepository.findByEmail(normalizedEmail);
+    if (existing) {
+      throw new AppError('Email is already registered', 409);
+    }
+
+    const code = this.generateVerificationCode();
+    const codeHash = this.hashVerificationCode(code);
+    const expiresAt = new Date(Date.now() + config.emailVerification.expiresInMs);
+
+    await EmailVerification.findOneAndUpdate(
+      { email: normalizedEmail },
+      { codeHash, expiresAt, verifiedAt: null },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+
+    await sendVerificationEmail(normalizedEmail, code);
+  }
+
+  async verifyEmailCode(email: string, code: string): Promise<void> {
+    const normalizedEmail = email.toLowerCase();
+    const record = await EmailVerification.findOne({ email: normalizedEmail }).select(
+      '+codeHash'
+    );
+
+    if (!record || record.expiresAt.getTime() < Date.now()) {
+      throw new AppError('Verification code is invalid or expired', 400);
+    }
+
+    if (record.codeHash !== this.hashVerificationCode(code)) {
+      throw new AppError('Verification code is invalid or expired', 400);
+    }
+
+    record.verifiedAt = new Date();
+    await record.save();
+  }
+
   async register(input: RegisterInput): Promise<LoginResult> {
-    const existing = await userRepository.findByEmail(input.email);
+    const normalizedEmail = input.email.toLowerCase();
+    const existing = await userRepository.findByEmail(normalizedEmail);
     if (existing) {
       throw new AppError('Email already registered', 409);
+    }
+
+    const verificationRecord = await EmailVerification.findOne({
+      email: normalizedEmail,
+      verifiedAt: { $ne: null },
+      expiresAt: { $gt: new Date() },
+    });
+    if (!verificationRecord) {
+      throw new AppError(
+        'Please verify your email before creating an account',
+        400
+      );
     }
 
     const hashedPassword = await hashPassword(input.password);
     const user = await userRepository.create({
       ...input,
+      email: normalizedEmail,
       password: hashedPassword,
       role: input.role || 'student',
+      isVerified: true,
     });
 
     const tokens = this.generateTokens(user);
     await userRepository.update(user._id.toString(), {
       refreshToken: tokens.refreshToken,
     });
+    await EmailVerification.deleteOne({ email: normalizedEmail });
 
     return {
       user: sanitizeUser(user),
@@ -190,6 +246,14 @@ export class AuthService {
       accessToken: generateAccessToken(payload),
       refreshToken: generateRefreshToken(payload),
     };
+  }
+
+  private generateVerificationCode(): string {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  }
+
+  private hashVerificationCode(code: string): string {
+    return crypto.createHash('sha256').update(code).digest('hex');
   }
 }
 

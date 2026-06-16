@@ -4,6 +4,8 @@ import { authenticate } from '../middlewares/auth.middleware';
 import { validate } from '../middlewares/validate.middleware';
 import { authRateLimiter } from '../middlewares/rateLimit.middleware';
 import {
+  sendVerificationCodeValidator,
+  verifyEmailCodeValidator,
   registerValidator,
   loginValidator,
   refreshTokenValidator,
@@ -14,6 +16,20 @@ import {
 
 const router = Router();
 
+router.post(
+  '/send-verification-code',
+  authRateLimiter,
+  sendVerificationCodeValidator,
+  validate,
+  authController.sendVerificationCode
+);
+router.post(
+  '/verify-email-code',
+  authRateLimiter,
+  verifyEmailCodeValidator,
+  validate,
+  authController.verifyEmailCode
+);
 router.post('/register', authRateLimiter, registerValidator, validate, authController.register);
 router.post('/login', authRateLimiter, loginValidator, validate, authController.login);
 router.post('/refresh-token', refreshTokenValidator, validate, authController.refreshToken);
