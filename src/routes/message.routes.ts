@@ -6,7 +6,6 @@ import { requireActive } from '../middlewares/active.middleware';
 import {
   createConversationValidator,
   sendMessageValidator,
-  mongoIdValidator,
   paginationValidator,
   conversationIdParamValidator,
 } from '../validators';
