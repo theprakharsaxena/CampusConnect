@@ -41,7 +41,7 @@ export const config = {
   },
   rateLimit: {
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10),
-    maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '500', 10),
+    maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '1000', 10),
   },
   passwordReset: {
     expiresIn: parseInt(process.env.PASSWORD_RESET_EXPIRES_IN || '3600000', 10),
