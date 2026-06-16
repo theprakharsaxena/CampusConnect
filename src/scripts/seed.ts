@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import { User, Post, Opportunity, Event, Connection } from '../models';
 import { hashPassword } from '../utils/password';
+import { getDefaultIsActiveForRole } from '../utils/permissions';
 
 dotenv.config();
 
@@ -96,6 +97,7 @@ const seed = async (): Promise<void> => {
       demoUsers.map(async (user) => ({
         ...user,
         password: await hashPassword(user.password),
+        isActive: getDefaultIsActiveForRole(user.role),
       }))
     );
 
