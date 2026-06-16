@@ -168,6 +168,10 @@ export const sendMessageValidator = [
   body('attachments').optional().isArray(),
 ];
 
+export const conversationIdParamValidator = [
+  param('conversationId').isMongoId().withMessage('Invalid conversation ID'),
+];
+
 export const feedValidator = [
   ...paginationValidator,
   query('sort').optional().isIn(['latest', 'trending']),

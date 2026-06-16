@@ -8,6 +8,7 @@ import {
   sendMessageValidator,
   mongoIdValidator,
   paginationValidator,
+  conversationIdParamValidator,
 } from '../validators';
 
 const router = Router();
@@ -29,11 +30,17 @@ router.post(
   validate,
   messageController.sendMessage
 );
-router.get('/:conversationId', paginationValidator, validate, messageController.getMessages);
+router.get(
+  '/:conversationId',
+  conversationIdParamValidator,
+  paginationValidator,
+  validate,
+  messageController.getMessages
+);
 router.put(
   '/:conversationId/read',
   requireActive,
-  mongoIdValidator,
+  conversationIdParamValidator,
   validate,
   messageController.markAsRead
 );
