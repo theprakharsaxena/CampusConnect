@@ -58,7 +58,8 @@ export class PostRepository {
 
   async unlikePost(postId: string, userId: string): Promise<IPost | null> {
     const post = await Post.findById(postId);
-    if (!post || !post.likedBy.some((id) => id.toString() === userId)) {
+    if (!post) return null;
+    if (!post.likedBy.some((id) => id.toString() === userId)) {
       return post.populate('author', 'name email profileImage role department');
     }
     return Post.findByIdAndUpdate(
