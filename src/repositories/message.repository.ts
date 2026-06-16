@@ -1,5 +1,6 @@
 import { Conversation, IConversation } from '../models';
 import { Message, IMessage } from '../models';
+import { Types } from 'mongoose';
 
 export class ConversationRepository {
   async create(participants: string[]): Promise<IConversation> {
@@ -84,6 +85,32 @@ export class MessageRepository {
       },
       { seen: true, seenAt: new Date() }
     );
+  }
+
+  async countUnseenByConversations(
+    conversationIds: string[],
+    userId: string
+  ): Promise<Record<string, number>> {
+    const results = await Message.aggregate([
+      {
+        $match: {
+          conversationId: { $in: conversationIds.map((id) => new Types.ObjectId(id)) },
+          sender: { $ne: new Types.ObjectId(userId) },
+          seen: false,
+        },
+      },
+      {
+        $group: {
+          _id: '$conversationId',
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+    const counts: Record<string, number> = {};
+    for (const r of results) {
+      counts[r._id.toString()] = r.count;
+    }
+    return counts;
   }
 }
 

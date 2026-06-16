@@ -5,7 +5,7 @@ import {
 import { notificationRepository } from '../repositories/notification.repository';
 import { AppError, buildPagination } from '../utils/response';
 import { IConversation, IMessage } from '../models';
-import { isUserInConversationRoom } from '../sockets';
+import { isUserInConversationRoom, getIO } from '../sockets';
 
 export class MessageService {
   async createConversation(
@@ -31,8 +31,22 @@ export class MessageService {
       page,
       limit
     );
+
+    // Get unseen message counts per conversation
+    const conversationIds = conversations.map((c) => c._id.toString());
+    const unreadCounts = conversationIds.length > 0
+      ? await messageRepository.countUnseenByConversations(conversationIds, userId)
+      : {};
+
+    // Attach unread counts to each conversation
+    const conversationsWithUnread = conversations.map((c) => {
+      const conv = c.toObject();
+      conv.unreadCount = unreadCounts[c._id.toString()] || 0;
+      return conv;
+    });
+
     return {
-      conversations,
+      conversations: conversationsWithUnread,
       pagination: buildPagination(page, limit, total),
     };
   }
@@ -68,10 +82,19 @@ export class MessageService {
     if (recipient) {
       const recipientId = recipient._id?.toString() || recipient.toString();
 
+      // Always emit conversation_updated so the messages list screen refreshes
+      try {
+        const io = getIO();
+        io.to(`user:${recipientId}`).emit('conversation_updated', {
+          conversationId,
+          lastMessage: { text, sender: senderId },
+        });
+      } catch (_) {}
+
       // Skip notification if recipient is already viewing this conversation
       const isRecipientInRoom = isUserInConversationRoom(recipientId, conversationId);
       if (!isRecipientInRoom) {
-        await notificationRepository.createOrUpdateMessageNotification({
+        const notification = await notificationRepository.createOrUpdateMessageNotification({
           userId: recipientId,
           type: 'message',
           title: 'New Message',

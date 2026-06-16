@@ -10,11 +10,19 @@ export class NotificationRepository {
     message: string;
     referenceId?: string;
   }): Promise<INotification> {
-    return Notification.create({
+    const notification = await Notification.create({
       ...data,
       userId: new Types.ObjectId(data.userId),
       ...(data.referenceId && { referenceId: new Types.ObjectId(data.referenceId) }),
     });
+
+    try {
+      const { getIO } = require('../sockets');
+      const io = getIO();
+      io.to(`user:${data.userId}`).emit('new_notification', notification);
+    } catch (_) {}
+
+    return notification;
   }
 
   async createOrUpdateMessageNotification(data: {
@@ -31,18 +39,27 @@ export class NotificationRepository {
       isRead: false,
     });
 
+    let notification: INotification;
     if (existing) {
       existing.message = data.message;
       existing.createdAt = new Date();
       existing.updatedAt = new Date();
-      return existing.save();
+      notification = await existing.save();
+    } else {
+      notification = await Notification.create({
+        ...data,
+        userId: new Types.ObjectId(data.userId),
+        referenceId: new Types.ObjectId(data.referenceId),
+      });
     }
 
-    return Notification.create({
-      ...data,
-      userId: new Types.ObjectId(data.userId),
-      referenceId: new Types.ObjectId(data.referenceId),
-    });
+    try {
+      const { getIO } = require('../sockets');
+      const io = getIO();
+      io.to(`user:${data.userId}`).emit('new_notification', notification);
+    } catch (_) {}
+
+    return notification;
   }
 
   async findByUserId(
