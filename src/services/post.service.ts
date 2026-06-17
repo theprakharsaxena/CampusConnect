@@ -2,7 +2,6 @@ import { postRepository } from '../repositories/post.repository';
 import { notificationRepository } from '../repositories/notification.repository';
 import { AppError, buildPagination } from '../utils/response';
 import { uploadToCloudinary } from '../utils/cloudinary';
-import { compressImageIfNeeded } from '../utils/imageCompressor';
 import { IPost } from '../models';
 
 export class PostService {
@@ -10,14 +9,16 @@ export class PostService {
     authorId: string,
     content: string,
     tags: string[] = [],
-    imageFiles: Array<{ buffer: Buffer; mimetype: string }> = []
+    imageBuffers: Buffer[] = []
   ): Promise<IPost> {
-    const images: string[] = [];
-    for (const file of imageFiles) {
-      const compressed = await compressImageIfNeeded(file.buffer, file.mimetype);
-      const { url } = await uploadToCloudinary(compressed, 'campusconnect/posts');
-      images.push(url);
-    }
+    // Images arrive pre-compressed from the client (≤5 MB each).
+    // Upload all images concurrently — no sequential waiting.
+    const images = await Promise.all(
+      imageBuffers.map(async (buffer) => {
+        const { url } = await uploadToCloudinary(buffer, 'campusconnect/posts');
+        return url;
+      })
+    );
 
     return postRepository.create({
       author: authorId as unknown as IPost['author'],

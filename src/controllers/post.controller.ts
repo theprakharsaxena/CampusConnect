@@ -11,15 +11,15 @@ export class PostController {
           ? JSON.parse(req.body.tags)
           : req.body.tags
         : [];
-      const imageFiles = (req.files as Express.Multer.File[] | undefined)?.map(
-        (f) => ({ buffer: f.buffer, mimetype: f.mimetype })
+      const imageBuffers = (req.files as Express.Multer.File[] | undefined)?.map(
+        (f) => f.buffer
       ) || [];
 
       const post = await postService.createPost(
         req.user!.userId,
         req.body.content,
         tags,
-        imageFiles
+        imageBuffers
       );
       sendSuccess(res, post, 'Post created', 201);
     } catch (error) {

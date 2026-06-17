@@ -25,9 +25,7 @@ export const upload = multer({
   storage,
   fileFilter,
   limits: {
-    // Accept up to 20 MB per file so large images can be received and
-    // compressed down to the 5 MB per-image target before upload.
-    // Anything over 20 MB is rejected immediately with a 413.
-    fileSize: 20 * 1024 * 1024, // 20MB
+    // Client compresses images to ≤5 MB before sending.
+    fileSize: 5 * 1024 * 1024, // 5 MB
   },
 });
