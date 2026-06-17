@@ -2,6 +2,7 @@ import { postRepository } from '../repositories/post.repository';
 import { notificationRepository } from '../repositories/notification.repository';
 import { AppError, buildPagination } from '../utils/response';
 import { uploadToCloudinary } from '../utils/cloudinary';
+import { compressImageIfNeeded } from '../utils/imageCompressor';
 import { IPost } from '../models';
 
 export class PostService {
@@ -9,11 +10,12 @@ export class PostService {
     authorId: string,
     content: string,
     tags: string[] = [],
-    imageBuffers: Buffer[] = []
+    imageFiles: Array<{ buffer: Buffer; mimetype: string }> = []
   ): Promise<IPost> {
     const images: string[] = [];
-    for (const buffer of imageBuffers) {
-      const { url } = await uploadToCloudinary(buffer, 'campusconnect/posts');
+    for (const file of imageFiles) {
+      const compressed = await compressImageIfNeeded(file.buffer, file.mimetype);
+      const { url } = await uploadToCloudinary(compressed, 'campusconnect/posts');
       images.push(url);
     }
 
