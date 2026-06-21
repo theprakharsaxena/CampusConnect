@@ -67,8 +67,8 @@ export class EventService {
     await eventRepository.delete(id);
   }
 
-  async getAll(page: number, limit: number) {
-    const { events, total } = await eventRepository.findAll(page, limit);
+  async getAll(page: number, limit: number, organizerId?: string) {
+    const { events, total } = await eventRepository.findAll(page, limit, organizerId);
     return {
       events,
       pagination: buildPagination(page, limit, total),

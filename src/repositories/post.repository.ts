@@ -24,18 +24,20 @@ export class PostRepository {
   async findFeed(
     page: number,
     limit: number,
-    sort: 'latest' | 'trending' = 'latest'
+    sort: 'latest' | 'trending' = 'latest',
+    authorId?: string
   ): Promise<{ posts: IPost[]; total: number }> {
     const skip = (page - 1) * limit;
     const sortField = sort === 'trending' ? '-likesCount' : '-createdAt';
+    const filter = authorId ? { author: authorId } : {};
 
     const [posts, total] = await Promise.all([
-      Post.find()
+      Post.find(filter)
         .populate('author', 'name email profileImage role department')
         .skip(skip)
         .limit(limit)
         .sort(sortField),
-      Post.countDocuments(),
+      Post.countDocuments(filter),
     ]);
 
     return { posts, total };

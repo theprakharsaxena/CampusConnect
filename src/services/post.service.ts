@@ -67,8 +67,8 @@ export class PostService {
     await postRepository.delete(postId);
   }
 
-  async getFeed(page: number, limit: number, sort: 'latest' | 'trending' = 'latest') {
-    const { posts, total } = await postRepository.findFeed(page, limit, sort);
+  async getFeed(page: number, limit: number, sort: 'latest' | 'trending' = 'latest', authorId?: string) {
+    const { posts, total } = await postRepository.findFeed(page, limit, sort, authorId);
     return {
       posts,
       pagination: buildPagination(page, limit, total),

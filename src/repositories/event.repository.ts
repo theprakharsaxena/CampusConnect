@@ -28,16 +28,18 @@ export class EventRepository {
 
   async findAll(
     page: number,
-    limit: number
+    limit: number,
+    organizerId?: string
   ): Promise<{ events: IEvent[]; total: number }> {
     const skip = (page - 1) * limit;
+    const filter = organizerId ? { organizer: organizerId } : {};
     const [events, total] = await Promise.all([
-      Event.find()
+      Event.find(filter)
         .populate('organizer', 'name email profileImage role department')
         .skip(skip)
         .limit(limit)
         .sort({ eventDate: 1 }),
-      Event.countDocuments(),
+      Event.countDocuments(filter),
     ]);
     return { events, total };
   }

@@ -66,7 +66,8 @@ export class PostController {
         req.query.limit as string
       );
       const sort = (req.query.sort as 'latest' | 'trending') || 'latest';
-      const result = await postService.getFeed(page, limit, sort);
+      const authorId = req.query.authorId as string | undefined;
+      const result = await postService.getFeed(page, limit, sort, authorId);
       sendSuccess(res, result.posts, undefined, 200, result.pagination);
     } catch (error) {
       next(error);

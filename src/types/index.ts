@@ -71,6 +71,7 @@ export interface OpportunityFilterQuery {
   type?: OpportunityType;
   skills?: string | string[];
   company?: string;
+  postedBy?: string;
   page?: number;
   limit?: number;
 }

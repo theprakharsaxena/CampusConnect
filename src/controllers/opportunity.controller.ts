@@ -55,6 +55,7 @@ export class OpportunityController {
         type: req.query.type as 'internship' | 'job' | 'referral' | 'hackathon' | 'event',
         company: req.query.company as string,
         skills: req.query.skills as string,
+        postedBy: req.query.postedBy as string,
         page,
         limit,
       });

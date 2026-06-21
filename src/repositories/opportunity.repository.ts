@@ -29,12 +29,13 @@ export class OpportunityRepository {
   async findWithFilters(
     filters: OpportunityFilterQuery
   ): Promise<{ opportunities: IOpportunity[]; total: number }> {
-    const { search, type, skills, company, page = 1, limit = 10 } = filters;
+    const { search, type, skills, company, postedBy, page = 1, limit = 10 } = filters;
     const query: FilterQuery<IOpportunity> = {};
 
     if (search) query.$text = { $search: search };
     if (type) query.type = type;
     if (company) query.company = new RegExp(company, 'i');
+    if (postedBy) query.postedBy = postedBy;
     if (skills) {
       const skillArray = Array.isArray(skills) ? skills : [skills];
       query.skills = { $in: skillArray };

@@ -55,7 +55,8 @@ export class EventController {
         req.query.page as string,
         req.query.limit as string
       );
-      const result = await eventService.getAll(page, limit);
+      const organizerId = req.query.organizerId as string | undefined;
+      const result = await eventService.getAll(page, limit, organizerId);
       sendSuccess(res, result.events, undefined, 200, result.pagination);
     } catch (error) {
       next(error);
