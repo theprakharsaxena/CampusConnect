@@ -42,7 +42,8 @@ export class PostController {
         getParam(req.params.id),
         req.user!.userId,
         req.body.content,
-        req.body.tags
+        req.body.tags,
+        req.user!.role
       );
       sendSuccess(res, post, 'Post updated');
     } catch (error) {
@@ -52,7 +53,7 @@ export class PostController {
 
   delete = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      await postService.deletePost(getParam(req.params.id), req.user!.userId);
+      await postService.deletePost(getParam(req.params.id), req.user!.userId, req.user!.role);
       sendSuccess(res, undefined, 'Post deleted');
     } catch (error) {
       next(error);

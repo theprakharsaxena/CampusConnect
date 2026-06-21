@@ -2,7 +2,8 @@ import { eventRepository } from '../repositories/event.repository';
 import { AppError, buildPagination } from '../utils/response';
 import { uploadToCloudinary } from '../utils/cloudinary';
 import { IEvent } from '../models';
-import { EventRsvpStatus } from '../types';
+import { EventRsvpStatus, UserRole } from '../types';
+import { canManageRole } from '../utils/permissions';
 
 export class EventService {
   async create(
@@ -34,13 +35,16 @@ export class EventService {
     userId: string,
     data: Partial<IEvent>,
     bannerBuffer?: Buffer,
-    isAdmin = false
+    userRole?: UserRole
   ): Promise<IEvent> {
     const event = await eventRepository.findById(id);
     if (!event) throw new AppError('Event not found', 404);
 
     const organizerId = event.organizer._id?.toString() || event.organizer.toString();
-    if (organizerId !== userId && !isAdmin) {
+    const isOrganizer = organizerId === userId;
+    const canManage = userRole && event.organizer.role && canManageRole(userRole, event.organizer.role as UserRole);
+
+    if (!isOrganizer && !canManage) {
       throw new AppError('Not authorized', 403);
     }
 
@@ -55,12 +59,15 @@ export class EventService {
     return updated;
   }
 
-  async delete(id: string, userId: string, isAdmin = false): Promise<void> {
+  async delete(id: string, userId: string, userRole?: UserRole): Promise<void> {
     const event = await eventRepository.findById(id);
     if (!event) throw new AppError('Event not found', 404);
 
     const organizerId = event.organizer._id?.toString() || event.organizer.toString();
-    if (organizerId !== userId && !isAdmin) {
+    const isOrganizer = organizerId === userId;
+    const canManage = userRole && event.organizer.role && canManageRole(userRole, event.organizer.role as UserRole);
+
+    if (!isOrganizer && !canManage) {
       throw new AppError('Not authorized', 403);
     }
 

@@ -3,6 +3,8 @@ import { notificationRepository } from '../repositories/notification.repository'
 import { AppError, buildPagination } from '../utils/response';
 import { uploadToCloudinary } from '../utils/cloudinary';
 import { IPost } from '../models';
+import { canManageRole } from '../utils/permissions';
+import { UserRole } from '../types';
 
 export class PostService {
   async createPost(
@@ -39,11 +41,17 @@ export class PostService {
     postId: string,
     userId: string,
     content: string,
-    tags?: string[]
+    tags?: string[],
+    userRole?: UserRole
   ): Promise<IPost> {
     const post = await postRepository.findById(postId);
     if (!post) throw new AppError('Post not found', 404);
-    if (post.author._id?.toString() !== userId && post.author.toString() !== userId) {
+
+    const authorId = post.author._id?.toString() || post.author.toString();
+    const isAuthor = authorId === userId;
+    const canManage = userRole && post.author.role && canManageRole(userRole, post.author.role as UserRole);
+
+    if (!isAuthor && !canManage) {
       throw new AppError('Not authorized to update this post', 403);
     }
 
@@ -55,12 +63,15 @@ export class PostService {
     return updated;
   }
 
-  async deletePost(postId: string, userId: string, isAdmin = false): Promise<void> {
+  async deletePost(postId: string, userId: string, userRole?: UserRole): Promise<void> {
     const post = await postRepository.findById(postId);
     if (!post) throw new AppError('Post not found', 404);
 
     const authorId = post.author._id?.toString() || post.author.toString();
-    if (authorId !== userId && !isAdmin) {
+    const isAuthor = authorId === userId;
+    const canManage = userRole && post.author.role && canManageRole(userRole, post.author.role as UserRole);
+
+    if (!isAuthor && !canManage) {
       throw new AppError('Not authorized to delete this post', 403);
     }
 

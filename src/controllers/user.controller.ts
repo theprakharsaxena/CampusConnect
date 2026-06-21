@@ -183,7 +183,7 @@ export class AdminController {
 
   deletePost = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      await postService.deletePost(getParam(req.params.id), req.user!.userId, true);
+      await postService.deletePost(getParam(req.params.id), req.user!.userId, req.user!.role);
       sendSuccess(res, undefined, 'Post deleted');
     } catch (error) {
       next(error);
@@ -192,7 +192,7 @@ export class AdminController {
 
   deleteOpportunity = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      await opportunityService.delete(getParam(req.params.id), req.user!.userId, true);
+      await opportunityService.delete(getParam(req.params.id), req.user!.userId, req.user!.role);
       sendSuccess(res, undefined, 'Opportunity deleted');
     } catch (error) {
       next(error);

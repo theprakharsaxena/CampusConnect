@@ -27,7 +27,8 @@ export class OpportunityController {
       const opportunity = await opportunityService.update(
         getParam(req.params.id),
         req.user!.userId,
-        req.body
+        req.body,
+        req.user!.role
       );
       sendSuccess(res, opportunity, 'Opportunity updated');
     } catch (error) {
@@ -37,7 +38,7 @@ export class OpportunityController {
 
   delete = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      await opportunityService.delete(getParam(req.params.id), req.user!.userId);
+      await opportunityService.delete(getParam(req.params.id), req.user!.userId, req.user!.role);
       sendSuccess(res, undefined, 'Opportunity deleted');
     } catch (error) {
       next(error);

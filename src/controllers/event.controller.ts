@@ -32,7 +32,8 @@ export class EventController {
         getParam(req.params.id),
         req.user!.userId,
         req.body,
-        req.file?.buffer
+        req.file?.buffer,
+        req.user!.role
       );
       sendSuccess(res, event, 'Event updated');
     } catch (error) {
@@ -42,7 +43,7 @@ export class EventController {
 
   delete = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      await eventService.delete(getParam(req.params.id), req.user!.userId);
+      await eventService.delete(getParam(req.params.id), req.user!.userId, req.user!.role);
       sendSuccess(res, undefined, 'Event deleted');
     } catch (error) {
       next(error);

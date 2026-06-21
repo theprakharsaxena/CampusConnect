@@ -1,7 +1,8 @@
 import { opportunityRepository } from '../repositories/opportunity.repository';
 import { AppError, buildPagination } from '../utils/response';
 import { IOpportunity } from '../models';
-import { OpportunityFilterQuery } from '../types';
+import { OpportunityFilterQuery, UserRole } from '../types';
+import { canManageRole } from '../utils/permissions';
 
 export class OpportunityService {
   async create(
@@ -24,13 +25,16 @@ export class OpportunityService {
     id: string,
     userId: string,
     data: Partial<IOpportunity>,
-    isAdmin = false
+    userRole?: UserRole
   ): Promise<IOpportunity> {
     const opportunity = await opportunityRepository.findById(id);
     if (!opportunity) throw new AppError('Opportunity not found', 404);
 
     const postedBy = opportunity.postedBy._id?.toString() || opportunity.postedBy.toString();
-    if (postedBy !== userId && !isAdmin) {
+    const isOwner = postedBy === userId;
+    const canManage = userRole && opportunity.postedBy.role && canManageRole(userRole, opportunity.postedBy.role as UserRole);
+
+    if (!isOwner && !canManage) {
       throw new AppError('Not authorized', 403);
     }
 
@@ -39,12 +43,15 @@ export class OpportunityService {
     return updated;
   }
 
-  async delete(id: string, userId: string, isAdmin = false): Promise<void> {
+  async delete(id: string, userId: string, userRole?: UserRole): Promise<void> {
     const opportunity = await opportunityRepository.findById(id);
     if (!opportunity) throw new AppError('Opportunity not found', 404);
 
     const postedBy = opportunity.postedBy._id?.toString() || opportunity.postedBy.toString();
-    if (postedBy !== userId && !isAdmin) {
+    const isOwner = postedBy === userId;
+    const canManage = userRole && opportunity.postedBy.role && canManageRole(userRole, opportunity.postedBy.role as UserRole);
+
+    if (!isOwner && !canManage) {
       throw new AppError('Not authorized', 403);
     }
 
