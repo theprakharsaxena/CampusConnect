@@ -4,13 +4,15 @@ import { uploadToCloudinary } from '../utils/cloudinary';
 import { IEvent } from '../models';
 import { IUser } from '../models/User.model';
 import { EventRsvpStatus, UserRole } from '../types';
-import { canManageRole } from '../utils/permissions';
+import { canManageRole, isManagementRole } from '../utils/permissions';
+import { ContentStatus } from '../models/Post.model';
 
 export class EventService {
   async create(
     organizerId: string,
     data: Partial<IEvent>,
-    bannerBuffer?: Buffer
+    bannerBuffer?: Buffer,
+    organizerRole: UserRole = 'student'
   ): Promise<IEvent> {
     const eventData = { ...data };
 
@@ -19,9 +21,12 @@ export class EventService {
       eventData.bannerImage = url;
     }
 
+    const status: ContentStatus = isManagementRole(organizerRole) ? 'approved' : 'pending';
+
     return eventRepository.create({
       ...eventData,
       organizer: organizerId as unknown as IEvent['organizer'],
+      status,
     });
   }
 
@@ -50,10 +55,18 @@ export class EventService {
       throw new AppError('Not authorized', 403);
     }
 
-    const updateData = { ...data };
+    const updateData: Record<string, unknown> = { ...data };
     if (bannerBuffer) {
       const { url } = await uploadToCloudinary(bannerBuffer, 'campusconnect/events');
       updateData.bannerImage = url;
+    }
+
+    // Students/alumni: any edit resets status to pending for re-review
+    if (isOrganizer && !isManagementRole(userRole || 'student')) {
+      updateData.status = 'pending';
+      updateData.rejectionReason = null;
+      updateData.reviewedBy = null;
+      updateData.reviewedAt = null;
     }
 
     const updated = await eventRepository.update(id, updateData);
@@ -77,8 +90,9 @@ export class EventService {
     await eventRepository.delete(id);
   }
 
-  async getAll(page: number, limit: number, organizerId?: string) {
-    const { events, total } = await eventRepository.findAll(page, limit, organizerId);
+  async getAll(page: number, limit: number, organizerId?: string, _userRole?: UserRole) {
+    // Events feed always shows only approved content
+    const { events, total } = await eventRepository.findAll(page, limit, organizerId, true);
     return {
       events,
       pagination: buildPagination(page, limit, total),

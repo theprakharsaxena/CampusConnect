@@ -113,6 +113,9 @@ const seed = async (): Promise<void> => {
         tags: ['webdev', 'college', 'project'],
         likesCount: 5,
         commentsCount: 2,
+        status: 'approved',
+        reviewedBy: hod._id,
+        reviewedAt: new Date(),
       },
       {
         author: bob._id,
@@ -120,6 +123,9 @@ const seed = async (): Promise<void> => {
         tags: ['study', 'machinelearning'],
         likesCount: 3,
         commentsCount: 1,
+        status: 'approved',
+        reviewedBy: teacher._id,
+        reviewedAt: new Date(),
       },
       {
         author: carol._id,
@@ -127,6 +133,28 @@ const seed = async (): Promise<void> => {
         tags: ['internship', 'referral', 'google'],
         likesCount: 15,
         commentsCount: 8,
+        status: 'approved',
+        reviewedBy: admin._id,
+        reviewedAt: new Date(),
+      },
+      {
+        author: alice._id,
+        content: 'Has anyone tried the new React 19 features? Would love to discuss!',
+        tags: ['react', 'frontend'],
+        likesCount: 0,
+        commentsCount: 0,
+        status: 'pending',
+      },
+      {
+        author: bob._id,
+        content: 'Sharing my notes on system design patterns - link in comments',
+        tags: ['systemdesign', 'notes'],
+        likesCount: 0,
+        commentsCount: 0,
+        status: 'rejected',
+        reviewedBy: teacher._id,
+        reviewedAt: new Date(),
+        rejectionReason: 'Please add the actual link in the post content instead of comments',
       },
     ]);
     console.log('Created demo posts');
@@ -141,6 +169,9 @@ const seed = async (): Promise<void> => {
         applyLink: 'https://careers.google.com',
         deadline: new Date('2026-08-01'),
         postedBy: carol._id,
+        status: 'approved',
+        reviewedBy: admin._id,
+        reviewedAt: new Date(),
       },
       {
         title: 'Full Stack Developer',
@@ -151,6 +182,7 @@ const seed = async (): Promise<void> => {
         applyLink: 'https://techstartup.com/careers',
         deadline: new Date('2026-07-15'),
         postedBy: admin._id,
+        status: 'approved',
       },
       {
         title: 'Hackathon 2026',
@@ -161,6 +193,18 @@ const seed = async (): Promise<void> => {
         applyLink: 'https://campusconnect.edu/hackathon',
         deadline: new Date('2026-09-01'),
         postedBy: hod._id,
+        status: 'approved',
+      },
+      {
+        title: 'Data Science Intern - Pending Review',
+        description: 'Exciting opportunity for students interested in data science.',
+        company: 'DataCorp',
+        type: 'internship',
+        skills: ['Python', 'SQL', 'Pandas'],
+        applyLink: 'https://datacorp.com/intern',
+        deadline: new Date('2026-09-15'),
+        postedBy: alice._id,
+        status: 'pending',
       },
     ]);
     console.log('Created demo opportunities');
@@ -174,6 +218,7 @@ const seed = async (): Promise<void> => {
         organizer: teacher._id,
         interestedCount: 25,
         goingCount: 40,
+        status: 'approved',
       },
       {
         title: 'Alumni Meetup 2026',
@@ -183,6 +228,17 @@ const seed = async (): Promise<void> => {
         organizer: hod._id,
         interestedCount: 50,
         goingCount: 30,
+        status: 'approved',
+      },
+      {
+        title: 'Study Group Meetup',
+        description: 'Weekly study group for ML enthusiasts. Bring your laptops!',
+        location: 'Library Room 3B',
+        eventDate: new Date('2026-07-25T16:00:00Z'),
+        organizer: bob._id,
+        interestedCount: 0,
+        goingCount: 0,
+        status: 'pending',
       },
     ]);
     console.log('Created demo events');

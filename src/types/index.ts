@@ -3,6 +3,8 @@ import { Types } from 'mongoose';
 
 export type UserRole = 'student' | 'teacher' | 'hod' | 'alumni' | 'admin';
 
+export type ContentStatus = 'pending' | 'approved' | 'rejected';
+
 export type ConnectionStatus = 'pending' | 'accepted' | 'rejected';
 
 export type OpportunityType =

@@ -3,7 +3,7 @@ import { AppError, buildPagination } from '../utils/response';
 import { postRepository } from '../repositories/post.repository';
 import { opportunityRepository } from '../repositories/opportunity.repository';
 import { eventRepository } from '../repositories/event.repository';
-import { FeedSort } from '../types';
+import { FeedSort, UserRole } from '../types';
 
 export class NotificationService {
   async getNotifications(userId: string, page: number, limit: number) {
@@ -31,13 +31,14 @@ export class NotificationService {
 }
 
 export class FeedService {
-  async getFeed(page: number, limit: number, sort: FeedSort = 'latest') {
+  async getFeed(page: number, limit: number, sort: FeedSort = 'latest', _userRole?: UserRole) {
     const fetchLimit = limit * 3;
+    // Unified feed always shows only approved content
 
     const [postsResult, opportunities, events] = await Promise.all([
-      postRepository.findFeed(1, fetchLimit, sort),
-      opportunityRepository.findRecent(fetchLimit),
-      eventRepository.findRecent(fetchLimit),
+      postRepository.findFeed(1, fetchLimit, sort, undefined, true),
+      opportunityRepository.findRecent(fetchLimit, true),
+      eventRepository.findRecent(fetchLimit, true),
     ]);
 
     const feedItems = [

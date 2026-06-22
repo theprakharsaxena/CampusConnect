@@ -3,16 +3,21 @@ import { AppError, buildPagination } from '../utils/response';
 import { IOpportunity } from '../models';
 import { IUser } from '../models/User.model';
 import { OpportunityFilterQuery, UserRole } from '../types';
-import { canManageRole } from '../utils/permissions';
+import { canManageRole, isManagementRole } from '../utils/permissions';
+import { ContentStatus } from '../models/Post.model';
 
 export class OpportunityService {
   async create(
     postedBy: string,
-    data: Partial<IOpportunity>
+    data: Partial<IOpportunity>,
+    posterRole: UserRole = 'student'
   ): Promise<IOpportunity> {
+    const status: ContentStatus = isManagementRole(posterRole) ? 'approved' : 'pending';
+
     return opportunityRepository.create({
       ...data,
       postedBy: postedBy as unknown as IOpportunity['postedBy'],
+      status,
     });
   }
 
@@ -40,7 +45,16 @@ export class OpportunityService {
       throw new AppError('Not authorized', 403);
     }
 
-    const updated = await opportunityRepository.update(id, data);
+    // Students/alumni: any edit resets status to pending for re-review
+    const updateData: Record<string, unknown> = { ...data };
+    if (isOwner && !isManagementRole(userRole || 'student')) {
+      updateData.status = 'pending';
+      updateData.rejectionReason = null;
+      updateData.reviewedBy = null;
+      updateData.reviewedAt = null;
+    }
+
+    const updated = await opportunityRepository.update(id, updateData);
     if (!updated) throw new AppError('Opportunity not found', 404);
     return updated;
   }
@@ -61,8 +75,9 @@ export class OpportunityService {
     await opportunityRepository.delete(id);
   }
 
-  async search(filters: OpportunityFilterQuery) {
-    const { opportunities, total } = await opportunityRepository.findWithFilters(filters);
+  async search(filters: OpportunityFilterQuery, _userRole?: UserRole) {
+    // Opportunities listing always shows only approved content
+    const { opportunities, total } = await opportunityRepository.findWithFilters(filters, true);
     const page = filters.page || 1;
     const limit = filters.limit || 10;
     return {

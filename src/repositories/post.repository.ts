@@ -25,11 +25,14 @@ export class PostRepository {
     page: number,
     limit: number,
     sort: 'latest' | 'trending' = 'latest',
-    authorId?: string
+    authorId?: string,
+    onlyApproved?: boolean
   ): Promise<{ posts: IPost[]; total: number }> {
     const skip = (page - 1) * limit;
     const sortField = sort === 'trending' ? '-likesCount' : '-createdAt';
-    const filter = authorId ? { author: authorId } : {};
+    const filter: FilterQuery<IPost> = {};
+    if (authorId) filter.author = authorId;
+    if (onlyApproved) filter.status = 'approved';
 
     const [posts, total] = await Promise.all([
       Post.find(filter)
@@ -43,8 +46,11 @@ export class PostRepository {
     return { posts, total };
   }
 
-  async findTrending(limit: number): Promise<IPost[]> {
-    return Post.find()
+  async findTrending(limit: number, onlyApproved?: boolean): Promise<IPost[]> {
+    const filter: FilterQuery<IPost> = {};
+    if (onlyApproved) filter.status = 'approved';
+
+    return Post.find(filter)
       .populate('author', 'name email profileImage role department')
       .sort({ likesCount: -1, commentsCount: -1 })
       .limit(limit);

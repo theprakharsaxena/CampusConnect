@@ -4,15 +4,17 @@ import { AppError, buildPagination } from '../utils/response';
 import { uploadToCloudinary } from '../utils/cloudinary';
 import { IPost } from '../models';
 import { IUser } from '../models/User.model';
-import { canManageRole } from '../utils/permissions';
+import { canManageRole, isManagementRole } from '../utils/permissions';
 import { UserRole } from '../types';
+import { ContentStatus } from '../models/Post.model';
 
 export class PostService {
   async createPost(
     authorId: string,
     content: string,
     tags: string[] = [],
-    imageBuffers: Buffer[] = []
+    imageBuffers: Buffer[] = [],
+    authorRole: UserRole = 'student'
   ): Promise<IPost> {
     // Images arrive pre-compressed from the client (≤5 MB each).
     // Upload all images concurrently — no sequential waiting.
@@ -23,11 +25,15 @@ export class PostService {
       })
     );
 
+    // Admin/HOD/Teacher posts are auto-approved; students/alumni go to review
+    const status: ContentStatus = isManagementRole(authorRole) ? 'approved' : 'pending';
+
     return postRepository.create({
       author: authorId as unknown as IPost['author'],
       content,
       tags,
       images,
+      status,
     });
   }
 
@@ -70,10 +76,20 @@ export class PostService {
       images = [...(existingImages || []), ...newImages];
     }
 
+    // Students/alumni: any edit resets status to pending for re-review
+    const statusUpdate: Record<string, unknown> = {};
+    if (isAuthor && !isManagementRole(userRole || 'student')) {
+      statusUpdate.status = 'pending';
+      statusUpdate.rejectionReason = null;
+      statusUpdate.reviewedBy = null;
+      statusUpdate.reviewedAt = null;
+    }
+
     const updated = await postRepository.update(postId, {
       content,
       ...(tags && { tags }),
       images,
+      ...statusUpdate,
     });
     if (!updated) throw new AppError('Post not found', 404);
     return updated;
@@ -95,16 +111,18 @@ export class PostService {
     await postRepository.delete(postId);
   }
 
-  async getFeed(page: number, limit: number, sort: 'latest' | 'trending' = 'latest', authorId?: string) {
-    const { posts, total } = await postRepository.findFeed(page, limit, sort, authorId);
+  async getFeed(page: number, limit: number, sort: 'latest' | 'trending' = 'latest', authorId?: string, _userRole?: UserRole) {
+    // Feed always shows only approved content for all users.
+    // Admin/HOD/Teacher use the Review Content screen to see pending items.
+    const { posts, total } = await postRepository.findFeed(page, limit, sort, authorId, true);
     return {
       posts,
       pagination: buildPagination(page, limit, total),
     };
   }
 
-  async getTrendingPosts(limit: number) {
-    return postRepository.findTrending(limit);
+  async getTrendingPosts(limit: number, _userRole?: UserRole) {
+    return postRepository.findTrending(limit, true);
   }
 
   async likePost(postId: string, userId: string): Promise<IPost> {

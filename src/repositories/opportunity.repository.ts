@@ -27,7 +27,8 @@ export class OpportunityRepository {
   }
 
   async findWithFilters(
-    filters: OpportunityFilterQuery
+    filters: OpportunityFilterQuery,
+    onlyApproved?: boolean
   ): Promise<{ opportunities: IOpportunity[]; total: number }> {
     const { search, type, skills, company, postedBy, page = 1, limit = 10 } = filters;
     const query: FilterQuery<IOpportunity> = {};
@@ -40,6 +41,7 @@ export class OpportunityRepository {
       const skillArray = Array.isArray(skills) ? skills : [skills];
       query.skills = { $in: skillArray };
     }
+    if (onlyApproved) query.status = 'approved';
 
     const skip = (page - 1) * limit;
     const [opportunities, total] = await Promise.all([
@@ -54,8 +56,11 @@ export class OpportunityRepository {
     return { opportunities, total };
   }
 
-  async findRecent(limit: number): Promise<IOpportunity[]> {
-    return Opportunity.find()
+  async findRecent(limit: number, onlyApproved?: boolean): Promise<IOpportunity[]> {
+    const filter: FilterQuery<IOpportunity> = {};
+    if (onlyApproved) filter.status = 'approved';
+
+    return Opportunity.find(filter)
       .populate('postedBy', 'name email profileImage role company')
       .sort({ createdAt: -1 })
       .limit(limit);

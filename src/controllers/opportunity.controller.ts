@@ -6,7 +6,7 @@ import { sendSuccess, parsePagination, getParam } from '../utils/response';
 export class OpportunityController {
   create = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const opportunity = await opportunityService.create(req.user!.userId, req.body);
+      const opportunity = await opportunityService.create(req.user!.userId, req.body, req.user!.role);
       sendSuccess(res, opportunity, 'Opportunity created', 201);
     } catch (error) {
       next(error);
@@ -59,7 +59,7 @@ export class OpportunityController {
         postedBy: req.query.postedBy as string,
         page,
         limit,
-      });
+      }, req.user!.role);
       sendSuccess(res, result.opportunities, undefined, 200, result.pagination);
     } catch (error) {
       next(error);

@@ -29,10 +29,14 @@ export class EventRepository {
   async findAll(
     page: number,
     limit: number,
-    organizerId?: string
+    organizerId?: string,
+    onlyApproved?: boolean
   ): Promise<{ events: IEvent[]; total: number }> {
     const skip = (page - 1) * limit;
-    const filter = organizerId ? { organizer: organizerId } : {};
+    const filter: Record<string, unknown> = {};
+    if (organizerId) filter.organizer = organizerId;
+    if (onlyApproved) filter.status = 'approved';
+
     const [events, total] = await Promise.all([
       Event.find(filter)
         .populate('organizer', 'name email profileImage role department')
@@ -44,8 +48,11 @@ export class EventRepository {
     return { events, total };
   }
 
-  async findRecent(limit: number): Promise<IEvent[]> {
-    return Event.find()
+  async findRecent(limit: number, onlyApproved?: boolean): Promise<IEvent[]> {
+    const filter: Record<string, unknown> = {};
+    if (onlyApproved) filter.status = 'approved';
+
+    return Event.find(filter)
       .populate('organizer', 'name email profileImage role department')
       .sort({ createdAt: -1 })
       .limit(limit);

@@ -9,6 +9,7 @@ import eventRoutes from './event.routes';
 import messageRoutes from './message.routes';
 import feedRoutes, { notificationRouter } from './feed.routes';
 import adminRoutes from './admin.routes';
+import moderationRoutes from './moderation.routes';
 import { sendSuccess } from '../utils/response';
 
 const router = Router();
@@ -28,5 +29,6 @@ router.use('/messages', messageRoutes);
 router.use('/feed', feedRoutes);
 router.use('/notifications', notificationRouter);
 router.use('/admin', adminRoutes);
+router.use('/moderation', moderationRoutes);
 
 export default router;

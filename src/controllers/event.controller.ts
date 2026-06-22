@@ -9,7 +9,8 @@ export class EventController {
       const event = await eventService.create(
         req.user!.userId,
         req.body,
-        req.file?.buffer
+        req.file?.buffer,
+        req.user!.role
       );
       sendSuccess(res, event, 'Event created', 201);
     } catch (error) {
@@ -57,7 +58,7 @@ export class EventController {
         req.query.limit as string
       );
       const organizerId = req.query.organizerId as string | undefined;
-      const result = await eventService.getAll(page, limit, organizerId);
+      const result = await eventService.getAll(page, limit, organizerId, req.user!.role);
       sendSuccess(res, result.events, undefined, 200, result.pagination);
     } catch (error) {
       next(error);
