@@ -60,7 +60,22 @@ router.post(
 router.get('/feed', paginationValidator, validate, postController.getFeed);
 router.get('/trending', postController.getTrending);
 router.get('/:id', mongoIdValidator, validate, postController.getById);
-router.put('/:id', requireActive, updatePostValidator, validate, postController.update);
+router.put(
+  '/:id',
+  requireActive,
+  upload.array('images', MAX_IMAGES),
+  (req: Request, res: Response, next: NextFunction): void => {
+    const files = req.files as Express.Multer.File[] | undefined;
+    if (files && files.length > MAX_IMAGES) {
+      sendError(res, `Too many images. Maximum is ${MAX_IMAGES}.`, 400);
+      return;
+    }
+    next();
+  },
+  updatePostValidator,
+  validate,
+  postController.update
+);
 router.delete('/:id', requireActive, mongoIdValidator, validate, postController.delete);
 router.post('/:id/like', requireActive, mongoIdValidator, validate, postController.like);
 router.delete('/:id/like', requireActive, mongoIdValidator, validate, postController.unlike);

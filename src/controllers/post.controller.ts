@@ -38,12 +38,23 @@ export class PostController {
 
   update = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
+      const imageBuffers = (req.files as Express.Multer.File[] | undefined)?.map(
+        (f) => f.buffer
+      ) || [];
+      const existingImages = req.body.existingImages
+        ? typeof req.body.existingImages === 'string'
+          ? req.body.existingImages.split(',').filter(Boolean)
+          : req.body.existingImages
+        : undefined;
+
       const post = await postService.updatePost(
         getParam(req.params.id),
         req.user!.userId,
         req.body.content,
         req.body.tags,
-        req.user!.role
+        req.user!.role,
+        imageBuffers,
+        existingImages
       );
       sendSuccess(res, post, 'Post updated');
     } catch (error) {

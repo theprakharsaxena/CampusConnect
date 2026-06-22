@@ -42,7 +42,9 @@ export class PostService {
     userId: string,
     content: string,
     tags?: string[],
-    userRole?: UserRole
+    userRole?: UserRole,
+    imageBuffers: Buffer[] = [],
+    existingImages?: string[]
   ): Promise<IPost> {
     const post = await postRepository.findById(postId);
     if (!post) throw new AppError('Post not found', 404);
@@ -55,9 +57,21 @@ export class PostService {
       throw new AppError('Not authorized to update this post', 403);
     }
 
+    let images = post.images;
+    if (existingImages || imageBuffers.length > 0) {
+      const newImages = await Promise.all(
+        imageBuffers.map(async (buffer) => {
+          const { url } = await uploadToCloudinary(buffer, 'campusconnect/posts');
+          return url;
+        })
+      );
+      images = [...(existingImages || []), ...newImages];
+    }
+
     const updated = await postRepository.update(postId, {
       content,
       ...(tags && { tags }),
+      images,
     });
     if (!updated) throw new AppError('Post not found', 404);
     return updated;
