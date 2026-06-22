@@ -25,6 +25,7 @@ const MANAGER_EDITABLE_FIELDS = [
   'skills',
   'linkedinUrl',
   'githubUrl',
+  'rollNumber',
 ] as const;
 
 export class UserService {
@@ -41,6 +42,20 @@ export class UserService {
     data: Partial<IUser>,
     imageBuffer?: Buffer
   ): Promise<Partial<IUser>> {
+    const existingUser = await userRepository.findById(userId);
+    if (!existingUser) {
+      throw new AppError('User not found', 404);
+    }
+
+    if (
+      existingUser.isActive &&
+      (existingUser.role === 'student' || existingUser.role === 'alumni') &&
+      data.rollNumber !== undefined &&
+      data.rollNumber !== existingUser.rollNumber
+    ) {
+      throw new AppError('Roll number cannot be changed after account activation', 400);
+    }
+
     const updateData = { ...data };
     delete updateData.password;
     delete updateData.email;

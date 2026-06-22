@@ -20,6 +20,7 @@ interface RegisterInput {
   role?: UserRole;
   department?: string;
   batch?: string;
+  rollNumber?: string;
 }
 
 interface LoginResult {

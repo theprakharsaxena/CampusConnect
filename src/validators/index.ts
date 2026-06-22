@@ -12,6 +12,11 @@ export const registerValidator = [
     .withMessage('Invalid role'),
   body('department').optional().trim(),
   body('batch').optional().trim(),
+  body('rollNumber')
+    .if((_, { req }) => !req.body.role || req.body.role === 'student' || req.body.role === 'alumni')
+    .trim()
+    .notEmpty()
+    .withMessage('Roll Number / University ID is required'),
 ];
 
 export const loginValidator = [
@@ -75,6 +80,7 @@ export const manageUserValidator = [
   body('githubUrl').optional({ values: 'falsy' }).isURL(),
   body('company').optional().trim(),
   body('designation').optional().trim(),
+  body('rollNumber').optional().trim(),
   body('skills').optional().isArray(),
   body('role')
     .optional()

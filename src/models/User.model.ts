@@ -15,6 +15,7 @@ export interface IUser extends Document {
   githubUrl?: string;
   company?: string;
   designation?: string;
+  rollNumber?: string;
   skills: string[];
   isVerified: boolean;
   isActive: boolean;
@@ -50,6 +51,7 @@ const userSchema = new Schema<IUser>(
     githubUrl: { type: String },
     company: { type: String, trim: true },
     designation: { type: String, trim: true },
+    rollNumber: { type: String, trim: true },
     skills: [{ type: String, trim: true }],
     isVerified: { type: Boolean, default: false },
     isActive: { type: Boolean, default: false },
