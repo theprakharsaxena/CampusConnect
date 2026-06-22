@@ -2,12 +2,13 @@ import { Response, NextFunction } from 'express';
 import { verifyAccessToken } from '../utils/jwt';
 import { AuthRequest, UserRole } from '../types';
 import { sendError } from '../utils/response';
+import { userRepository } from '../repositories/user.repository';
 
-export const authenticate = (
+export const authenticate = async (
   req: AuthRequest,
   res: Response,
   next: NextFunction
-): void => {
+): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader?.startsWith('Bearer ')) {
@@ -18,6 +19,18 @@ export const authenticate = (
     const token = authHeader.split(' ')[1];
     const decoded = verifyAccessToken(token);
     req.user = decoded;
+
+    // Check if user is blocked — force logout
+    const user = await userRepository.findById(decoded.userId);
+    if (!user) {
+      sendError(res, 'User not found', 401);
+      return;
+    }
+    if (user.isBlocked) {
+      sendError(res, 'Your account has been blocked', 403);
+      return;
+    }
+
     next();
   } catch {
     sendError(res, 'Invalid or expired access token', 401);
