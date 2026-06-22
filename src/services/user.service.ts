@@ -1,7 +1,7 @@
 import { userRepository } from '../repositories/user.repository';
 import { AppError, buildPagination } from '../utils/response';
 import { IUser } from '../models';
-import { UserFilterQuery } from '../types';
+import { UserFilterQuery, UserRole } from '../types';
 import { uploadToCloudinary } from '../utils/cloudinary';
 import {
   assertCanActivateUser,
@@ -196,21 +196,44 @@ export class AdminService {
     };
   }
 
-  async blockUser(userId: string): Promise<Partial<IUser>> {
+  async blockUser(userId: string, actorId: string, actorRole: UserRole): Promise<Partial<IUser>> {
+    if (userId === actorId) {
+      throw new AppError('You cannot block yourself', 400);
+    }
+    const target = await userRepository.findById(userId);
+    if (!target) throw new AppError('User not found', 404);
+    // HOD cannot block admin
+    if (actorRole === 'hod' && target.role === 'admin') {
+      throw new AppError('You do not have permission to block an admin', 403);
+    }
     const user = await userRepository.update(userId, { isBlocked: true });
     if (!user) throw new AppError('User not found', 404);
     return sanitizeUser(user);
   }
 
-  async unblockUser(userId: string): Promise<Partial<IUser>> {
+  async unblockUser(userId: string, _actorId: string, actorRole: UserRole): Promise<Partial<IUser>> {
+    if (actorRole === 'hod') {
+      const target = await userRepository.findById(userId);
+      if (target && target.role === 'admin') {
+        throw new AppError('You do not have permission to unblock an admin', 403);
+      }
+    }
     const user = await userRepository.update(userId, { isBlocked: false });
     if (!user) throw new AppError('User not found', 404);
     return sanitizeUser(user);
   }
 
-  async deleteUser(userId: string): Promise<void> {
-    const user = await userRepository.delete(userId);
-    if (!user) throw new AppError('User not found', 404);
+  async deleteUser(userId: string, actorId: string, actorRole: UserRole): Promise<void> {
+    if (userId === actorId) {
+      throw new AppError('You cannot delete yourself', 400);
+    }
+    const target = await userRepository.findById(userId);
+    if (!target) throw new AppError('User not found', 404);
+    // HOD cannot delete admin
+    if (actorRole === 'hod' && target.role === 'admin') {
+      throw new AppError('You do not have permission to delete an admin', 403);
+    }
+    await userRepository.delete(userId);
   }
 
   async getAnalytics() {

@@ -156,7 +156,7 @@ export class AdminController {
 
   blockUser = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const user = await adminService.blockUser(getParam(req.params.id));
+      const user = await adminService.blockUser(getParam(req.params.id), req.user!.userId, req.user!.role);
       sendSuccess(res, user, 'User blocked');
     } catch (error) {
       next(error);
@@ -165,7 +165,7 @@ export class AdminController {
 
   unblockUser = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const user = await adminService.unblockUser(getParam(req.params.id));
+      const user = await adminService.unblockUser(getParam(req.params.id), req.user!.userId, req.user!.role);
       sendSuccess(res, user, 'User unblocked');
     } catch (error) {
       next(error);
@@ -174,7 +174,7 @@ export class AdminController {
 
   deleteUser = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      await adminService.deleteUser(getParam(req.params.id));
+      await adminService.deleteUser(getParam(req.params.id), req.user!.userId, req.user!.role);
       sendSuccess(res, undefined, 'User deleted');
     } catch (error) {
       next(error);

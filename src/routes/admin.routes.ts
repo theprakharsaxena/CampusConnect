@@ -6,7 +6,7 @@ import { mongoIdValidator, paginationValidator } from '../validators';
 
 const router = Router();
 
-router.use(authenticate, authorize('admin'));
+router.use(authenticate, authorize('admin', 'hod'));
 
 router.get('/users', paginationValidator, validate, adminController.getAllUsers);
 router.get('/analytics', adminController.getAnalytics);
