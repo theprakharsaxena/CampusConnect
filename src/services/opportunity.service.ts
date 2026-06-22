@@ -1,6 +1,7 @@
 import { opportunityRepository } from '../repositories/opportunity.repository';
 import { AppError, buildPagination } from '../utils/response';
 import { IOpportunity } from '../models';
+import { IUser } from '../models/User.model';
 import { OpportunityFilterQuery, UserRole } from '../types';
 import { canManageRole } from '../utils/permissions';
 
@@ -30,9 +31,10 @@ export class OpportunityService {
     const opportunity = await opportunityRepository.findById(id);
     if (!opportunity) throw new AppError('Opportunity not found', 404);
 
-    const postedBy = opportunity.postedBy._id?.toString() || opportunity.postedBy.toString();
+    const poster = opportunity.postedBy as IUser;
+    const postedBy = poster._id?.toString() || (opportunity.postedBy as unknown as string).toString();
     const isOwner = postedBy === userId;
-    const canManage = userRole && opportunity.postedBy.role && canManageRole(userRole, opportunity.postedBy.role as UserRole);
+    const canManage = userRole && poster.role && canManageRole(userRole, poster.role);
 
     if (!isOwner && !canManage) {
       throw new AppError('Not authorized', 403);
@@ -47,9 +49,10 @@ export class OpportunityService {
     const opportunity = await opportunityRepository.findById(id);
     if (!opportunity) throw new AppError('Opportunity not found', 404);
 
-    const postedBy = opportunity.postedBy._id?.toString() || opportunity.postedBy.toString();
+    const poster = opportunity.postedBy as IUser;
+    const postedBy = poster._id?.toString() || (opportunity.postedBy as unknown as string).toString();
     const isOwner = postedBy === userId;
-    const canManage = userRole && opportunity.postedBy.role && canManageRole(userRole, opportunity.postedBy.role as UserRole);
+    const canManage = userRole && poster.role && canManageRole(userRole, poster.role);
 
     if (!isOwner && !canManage) {
       throw new AppError('Not authorized', 403);

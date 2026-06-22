@@ -2,6 +2,7 @@ import { eventRepository } from '../repositories/event.repository';
 import { AppError, buildPagination } from '../utils/response';
 import { uploadToCloudinary } from '../utils/cloudinary';
 import { IEvent } from '../models';
+import { IUser } from '../models/User.model';
 import { EventRsvpStatus, UserRole } from '../types';
 import { canManageRole } from '../utils/permissions';
 
@@ -40,9 +41,10 @@ export class EventService {
     const event = await eventRepository.findById(id);
     if (!event) throw new AppError('Event not found', 404);
 
-    const organizerId = event.organizer._id?.toString() || event.organizer.toString();
+    const organizer = event.organizer as IUser;
+    const organizerId = organizer._id?.toString() || (event.organizer as unknown as string).toString();
     const isOrganizer = organizerId === userId;
-    const canManage = userRole && event.organizer.role && canManageRole(userRole, event.organizer.role as UserRole);
+    const canManage = userRole && organizer.role && canManageRole(userRole, organizer.role);
 
     if (!isOrganizer && !canManage) {
       throw new AppError('Not authorized', 403);
@@ -63,9 +65,10 @@ export class EventService {
     const event = await eventRepository.findById(id);
     if (!event) throw new AppError('Event not found', 404);
 
-    const organizerId = event.organizer._id?.toString() || event.organizer.toString();
+    const organizer = event.organizer as IUser;
+    const organizerId = organizer._id?.toString() || (event.organizer as unknown as string).toString();
     const isOrganizer = organizerId === userId;
-    const canManage = userRole && event.organizer.role && canManageRole(userRole, event.organizer.role as UserRole);
+    const canManage = userRole && organizer.role && canManageRole(userRole, organizer.role);
 
     if (!isOrganizer && !canManage) {
       throw new AppError('Not authorized', 403);

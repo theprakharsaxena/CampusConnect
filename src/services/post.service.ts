@@ -3,6 +3,7 @@ import { notificationRepository } from '../repositories/notification.repository'
 import { AppError, buildPagination } from '../utils/response';
 import { uploadToCloudinary } from '../utils/cloudinary';
 import { IPost } from '../models';
+import { IUser } from '../models/User.model';
 import { canManageRole } from '../utils/permissions';
 import { UserRole } from '../types';
 
@@ -49,9 +50,10 @@ export class PostService {
     const post = await postRepository.findById(postId);
     if (!post) throw new AppError('Post not found', 404);
 
-    const authorId = post.author._id?.toString() || post.author.toString();
+    const author = post.author as IUser;
+    const authorId = author._id?.toString() || (post.author as unknown as string).toString();
     const isAuthor = authorId === userId;
-    const canManage = userRole && post.author.role && canManageRole(userRole, post.author.role as UserRole);
+    const canManage = userRole && author.role && canManageRole(userRole, author.role);
 
     if (!isAuthor && !canManage) {
       throw new AppError('Not authorized to update this post', 403);
@@ -81,9 +83,10 @@ export class PostService {
     const post = await postRepository.findById(postId);
     if (!post) throw new AppError('Post not found', 404);
 
-    const authorId = post.author._id?.toString() || post.author.toString();
+    const author = post.author as IUser;
+    const authorId = author._id?.toString() || (post.author as unknown as string).toString();
     const isAuthor = authorId === userId;
-    const canManage = userRole && post.author.role && canManageRole(userRole, post.author.role as UserRole);
+    const canManage = userRole && author.role && canManageRole(userRole, author.role);
 
     if (!isAuthor && !canManage) {
       throw new AppError('Not authorized to delete this post', 403);
@@ -114,7 +117,7 @@ export class PostService {
     const updated = await postRepository.likePost(postId, userId);
     if (!updated) throw new AppError('Post not found', 404);
 
-    const authorId = post.author._id?.toString() || post.author.toString();
+    const authorId = (post.author as IUser)._id?.toString() || (post.author as unknown as string).toString();
     if (authorId !== userId) {
       await notificationRepository.create({
         userId: authorId,

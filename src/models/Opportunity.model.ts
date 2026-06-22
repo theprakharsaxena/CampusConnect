@@ -1,5 +1,6 @@
-import { Schema, model, Document, Types } from 'mongoose';
+import { Schema, model, Document, Types, PopulatedDoc } from 'mongoose';
 import { OpportunityType } from '../types';
+import { IUser } from './User.model';
 
 export interface IOpportunity extends Document {
   _id: Types.ObjectId;
@@ -10,7 +11,7 @@ export interface IOpportunity extends Document {
   skills: string[];
   applyLink?: string;
   deadline?: Date;
-  postedBy: Types.ObjectId;
+  postedBy: PopulatedDoc<IUser & Document>;
   createdAt: Date;
   updatedAt: Date;
 }

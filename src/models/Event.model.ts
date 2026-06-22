@@ -1,5 +1,6 @@
-import { Schema, model, Document, Types } from 'mongoose';
+import { Schema, model, Document, Types, PopulatedDoc } from 'mongoose';
 import { EventRsvpStatus } from '../types';
+import { IUser } from './User.model';
 
 export interface IEventRsvp {
   user: Types.ObjectId;
@@ -13,7 +14,7 @@ export interface IEvent extends Document {
   location: string;
   eventDate: Date;
   bannerImage?: string;
-  organizer: Types.ObjectId;
+  organizer: PopulatedDoc<IUser & Document>;
   rsvps: IEventRsvp[];
   interestedCount: number;
   goingCount: number;

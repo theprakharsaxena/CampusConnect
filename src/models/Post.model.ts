@@ -1,8 +1,9 @@
-import { Schema, model, Document, Types } from 'mongoose';
+import { Schema, model, Document, Types, PopulatedDoc } from 'mongoose';
+import { IUser } from './User.model';
 
 export interface IPost extends Document {
   _id: Types.ObjectId;
-  author: Types.ObjectId;
+  author: PopulatedDoc<IUser & Document>;
   content: string;
   images: string[];
   tags: string[];

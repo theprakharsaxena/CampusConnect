@@ -3,6 +3,7 @@ import { postRepository } from '../repositories/post.repository';
 import { notificationRepository } from '../repositories/notification.repository';
 import { AppError, buildPagination } from '../utils/response';
 import { IComment } from '../models';
+import { IUser } from '../models/User.model';
 
 export class CommentService {
   async addComment(
@@ -21,7 +22,7 @@ export class CommentService {
 
     await postRepository.incrementCommentsCount(postId);
 
-    const authorId = post.author._id?.toString() || post.author.toString();
+    const authorId = (post.author as IUser)._id?.toString() || (post.author as unknown as string).toString();
     if (authorId !== userId) {
       await notificationRepository.create({
         userId: authorId,
