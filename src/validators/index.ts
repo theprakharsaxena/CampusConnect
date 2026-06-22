@@ -59,8 +59,8 @@ export const updateProfileValidator = [
   body('bio').optional().isLength({ max: 500 }),
   body('department').optional().trim(),
   body('batch').optional().trim(),
-  body('linkedinUrl').optional().isURL(),
-  body('githubUrl').optional().isURL(),
+  body('linkedinUrl').optional({ values: 'falsy' }).isURL(),
+  body('githubUrl').optional({ values: 'falsy' }).isURL(),
   body('company').optional().trim(),
   body('designation').optional().trim(),
   body('skills').optional().isArray(),
@@ -71,8 +71,8 @@ export const manageUserValidator = [
   body('bio').optional().isLength({ max: 500 }),
   body('department').optional().trim(),
   body('batch').optional().trim(),
-  body('linkedinUrl').optional().isURL(),
-  body('githubUrl').optional().isURL(),
+  body('linkedinUrl').optional({ values: 'falsy' }).isURL(),
+  body('githubUrl').optional({ values: 'falsy' }).isURL(),
   body('company').optional().trim(),
   body('designation').optional().trim(),
   body('skills').optional().isArray(),
@@ -156,7 +156,7 @@ export const createOpportunityValidator = [
     .isIn(['internship', 'job', 'referral', 'hackathon', 'event'])
     .withMessage('Invalid opportunity type'),
   body('skills').optional().isArray(),
-  body('applyLink').optional().isURL(),
+  body('applyLink').optional({ values: 'falsy' }).isURL(),
   body('deadline').optional().isISO8601(),
 ];
 
