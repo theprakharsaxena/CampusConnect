@@ -47,7 +47,7 @@ const options: swaggerJsdoc.Options = {
             name: { type: 'string', example: 'Test Student' },
             email: { type: 'string', format: 'email', example: 'test@student.campusconnect.edu' },
             password: { type: 'string', minLength: 8, example: 'Student@123' },
-            role: { type: 'string', enum: ['student', 'teacher', 'hod', 'alumni', 'admin'] },
+            role: { type: 'string', enum: ['student', 'teacher', 'hod', 'alumni', 'developer'] },
             department: { type: 'string', example: 'Computer Science' },
             batch: { type: 'string', example: '2025' },
           },
@@ -67,7 +67,7 @@ const options: swaggerJsdoc.Options = {
             email: { type: 'string', format: 'email' },
             role: {
               type: 'string',
-              enum: ['student', 'teacher', 'hod', 'alumni', 'admin'],
+              enum: ['student', 'teacher', 'hod', 'alumni', 'developer'],
             },
             department: { type: 'string' },
             batch: { type: 'string' },

@@ -140,7 +140,7 @@ export class UserManagementService {
       }
     }
 
-    if (actor.role === 'admin' && data.role) {
+    if (actor.role === 'developer' && data.role) {
       updateData.role = data.role;
     }
 
@@ -203,7 +203,7 @@ export class AdminService {
     const target = await userRepository.findById(userId);
     if (!target) throw new AppError('User not found', 404);
     // HOD cannot block admin
-    if (actorRole === 'hod' && target.role === 'admin') {
+    if (actorRole === 'hod' && target.role === 'developer') {
       throw new AppError('You do not have permission to block an admin', 403);
     }
     const user = await userRepository.update(userId, { isBlocked: true });
@@ -214,7 +214,7 @@ export class AdminService {
   async unblockUser(userId: string, _actorId: string, actorRole: UserRole): Promise<Partial<IUser>> {
     if (actorRole === 'hod') {
       const target = await userRepository.findById(userId);
-      if (target && target.role === 'admin') {
+      if (target && target.role === 'developer') {
         throw new AppError('You do not have permission to unblock an admin', 403);
       }
     }
@@ -230,7 +230,7 @@ export class AdminService {
     const target = await userRepository.findById(userId);
     if (!target) throw new AppError('User not found', 404);
     // HOD cannot delete admin
-    if (actorRole === 'hod' && target.role === 'admin') {
+    if (actorRole === 'hod' && target.role === 'developer') {
       throw new AppError('You do not have permission to delete an admin', 403);
     }
     await userRepository.delete(userId);

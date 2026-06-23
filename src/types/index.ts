@@ -1,7 +1,7 @@
 import { Request } from 'express';
 import { Types } from 'mongoose';
 
-export type UserRole = 'student' | 'teacher' | 'hod' | 'alumni' | 'admin';
+export type UserRole = 'student' | 'teacher' | 'hod' | 'alumni' | 'developer';
 
 export type ContentStatus = 'pending' | 'approved' | 'rejected';
 

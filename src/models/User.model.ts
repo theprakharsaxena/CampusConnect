@@ -40,7 +40,7 @@ const userSchema = new Schema<IUser>(
     password: { type: String, required: true, select: false },
     role: {
       type: String,
-      enum: ['student', 'teacher', 'hod', 'alumni', 'admin'],
+      enum: ['student', 'teacher', 'hod', 'alumni', 'developer'],
       default: 'student',
     },
     department: { type: String, trim: true },

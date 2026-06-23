@@ -8,7 +8,7 @@ export const registerValidator = [
     .withMessage('Password must be at least 8 characters'),
   body('role')
     .optional()
-    .isIn(['student', 'teacher', 'hod', 'alumni', 'admin'])
+    .isIn(['student', 'teacher', 'hod', 'alumni', 'developer'])
     .withMessage('Invalid role'),
   body('department').optional().trim(),
   body('batch').optional().trim(),
@@ -84,7 +84,7 @@ export const manageUserValidator = [
   body('skills').optional().isArray(),
   body('role')
     .optional()
-    .isIn(['student', 'teacher', 'hod', 'alumni', 'admin'])
+    .isIn(['student', 'teacher', 'hod', 'alumni', 'developer'])
     .withMessage('Invalid role'),
 ];
 
@@ -98,7 +98,7 @@ export const userSearchValidator = [
   query('search').optional().trim(),
   query('role')
     .optional()
-    .isIn(['student', 'teacher', 'hod', 'alumni', 'admin']),
+    .isIn(['student', 'teacher', 'hod', 'alumni', 'developer']),
   query('department').optional().trim(),
   query('batch').optional().trim(),
   query('skills').optional(),

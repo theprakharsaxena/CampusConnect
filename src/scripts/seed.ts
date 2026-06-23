@@ -10,12 +10,12 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/campus
 
 const demoUsers = [
   {
-    name: 'Admin User',
-    email: 'admin@campusconnect.edu',
-    password: 'Admin@12345',
-    role: 'admin' as const,
+    name: 'Developer User',
+    email: 'developer@campusconnect.edu',
+    password: 'Developer@12345',
+    role: 'developer' as const,
     department: 'Administration',
-    bio: 'Platform administrator',
+    bio: 'Platform developer',
     isVerified: true,
   },
   {
@@ -104,7 +104,7 @@ const seed = async (): Promise<void> => {
     const createdUsers = await User.insertMany(hashedUsers);
     console.log(`Created ${createdUsers.length} users`);
 
-    const [admin, hod, teacher, alice, bob, carol] = createdUsers;
+    const [developer, hod, teacher, alice, bob, carol] = createdUsers;
 
     await Post.insertMany([
       {
@@ -134,7 +134,7 @@ const seed = async (): Promise<void> => {
         likesCount: 15,
         commentsCount: 8,
         status: 'approved',
-        reviewedBy: admin._id,
+        reviewedBy: developer._id,
         reviewedAt: new Date(),
       },
       {
@@ -170,7 +170,7 @@ const seed = async (): Promise<void> => {
         deadline: new Date('2026-08-01'),
         postedBy: carol._id,
         status: 'approved',
-        reviewedBy: admin._id,
+        reviewedBy: developer._id,
         reviewedAt: new Date(),
       },
       {
@@ -181,7 +181,7 @@ const seed = async (): Promise<void> => {
         skills: ['React', 'Node.js', 'MongoDB'],
         applyLink: 'https://techstartup.com/careers',
         deadline: new Date('2026-07-15'),
-        postedBy: admin._id,
+        postedBy: developer._id,
         status: 'approved',
       },
       {

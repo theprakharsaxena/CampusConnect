@@ -14,7 +14,7 @@ router.use(authenticate);
 // GET /moderation/pending/:type — list pending content for review
 router.get(
   '/pending/:type',
-  authorize('admin', 'hod', 'teacher'),
+  authorize('developer', 'hod', 'teacher'),
   requireActive,
   paginationValidator,
   validate,
@@ -24,7 +24,7 @@ router.get(
 // PUT /moderation/:type/:id/approve — approve a piece of content
 router.put(
   '/:type/:id/approve',
-  authorize('admin', 'hod', 'teacher'),
+  authorize('developer', 'hod', 'teacher'),
   requireActive,
   moderationController.approve
 );
@@ -32,7 +32,7 @@ router.put(
 // PUT /moderation/:type/:id/reject — reject a piece of content
 router.put(
   '/:type/:id/reject',
-  authorize('admin', 'hod', 'teacher'),
+  authorize('developer', 'hod', 'teacher'),
   requireActive,
   moderationController.reject
 );

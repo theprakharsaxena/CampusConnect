@@ -4,7 +4,7 @@ import { AppError } from './response';
 
 /** Roles each role is allowed to manage (view list, edit, delete, activate/deactivate) */
 export const MANAGEABLE_ROLES: Record<UserRole, UserRole[]> = {
-  admin: ['student', 'teacher', 'hod', 'alumni', 'admin'],
+  developer: ['student', 'teacher', 'hod', 'alumni', 'developer'],
   hod: ['student', 'teacher', 'alumni'],
   teacher: ['student', 'alumni'],
   student: [],
@@ -13,7 +13,7 @@ export const MANAGEABLE_ROLES: Record<UserRole, UserRole[]> = {
 
 /** Roles each role can activate/deactivate */
 export const ACTIVATION_ROLES: Record<UserRole, UserRole[]> = {
-  admin: ['student', 'teacher', 'hod', 'alumni'],
+  developer: ['student', 'teacher', 'hod', 'alumni'],
   hod: ['student', 'teacher', 'alumni'],
   teacher: ['student', 'alumni'],
   student: [],
@@ -27,7 +27,7 @@ export const canActivateRole = (actorRole: UserRole, targetRole: UserRole): bool
   ACTIVATION_ROLES[actorRole].includes(targetRole);
 
 export const isManagementRole = (role: UserRole): boolean =>
-  role === 'admin' || role === 'hod' || role === 'teacher';
+  role === 'developer' || role === 'hod' || role === 'teacher';
 
 export const assertCanManageUser = (
   actor: Pick<IUser, '_id' | 'role'>,
@@ -53,4 +53,4 @@ export const assertCanActivateUser = (
   }
 };
 
-export const getDefaultIsActiveForRole = (role: UserRole): boolean => role === 'admin';
+export const getDefaultIsActiveForRole = (role: UserRole): boolean => role === 'developer';
