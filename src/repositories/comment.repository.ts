@@ -3,11 +3,11 @@ import { Comment, IComment } from '../models';
 export class CommentRepository {
   async create(data: Partial<IComment>): Promise<IComment> {
     const comment = await Comment.create(data);
-    return comment.populate('userId', 'name email profileImage');
+    return comment.populate('userId', 'name email profileImage role');
   }
 
   async findById(id: string): Promise<IComment | null> {
-    return Comment.findById(id).populate('userId', 'name email profileImage');
+    return Comment.findById(id).populate('userId', 'name email profileImage role');
   }
 
   async delete(id: string): Promise<IComment | null> {
@@ -22,7 +22,7 @@ export class CommentRepository {
     const skip = (page - 1) * limit;
     const [comments, total] = await Promise.all([
       Comment.find({ postId })
-        .populate('userId', 'name email profileImage')
+        .populate('userId', 'name email profileImage role')
         .skip(skip)
         .limit(limit)
         .sort({ createdAt: -1 }),
