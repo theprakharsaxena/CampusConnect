@@ -85,7 +85,7 @@ src/
 | **Messages** | Conversations, Send, Read receipts |
 | **Notifications** | List, Mark read |
 | **Feed** | Unified feed (posts + opportunities + events) |
-| **Admin** | User management, Analytics |
+| **Developer** | User management, Analytics |
 
 ## Demo Credentials
 
@@ -93,7 +93,7 @@ After running `npm run seed`:
 
 | Role | Email | Password |
 |------|-------|----------|
-| Admin | admin@campusconnect.edu | Admin@12345 |
+| Developer | developer@campusconnect.edu | Developer@12345 |
 | HOD | sarah.johnson@campusconnect.edu | Teacher@123 |
 | Teacher | michael.chen@campusconnect.edu | Teacher@123 |
 | Student | alice.williams@student.campusconnect.edu | Student@123 |

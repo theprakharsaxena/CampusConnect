@@ -14,7 +14,7 @@ const demoUsers = [
     email: 'developer@campusconnect.edu',
     password: 'Developer@12345',
     role: 'developer' as const,
-    department: 'Administration',
+    department: 'Developeristration',
     bio: 'Platform developer',
     isVerified: true,
   },

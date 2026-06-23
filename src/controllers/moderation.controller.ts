@@ -10,7 +10,7 @@ const validTypes = ['post', 'event', 'opportunity'];
 export class ModerationController {
   /**
    * GET /moderation/pending/:type
-   * Lists all pending content of a given type. Admin/HOD/Teacher only.
+   * Lists all pending content of a given type. Developer/HOD/Teacher only.
    */
   getPending = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {

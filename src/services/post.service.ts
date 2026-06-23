@@ -25,7 +25,7 @@ export class PostService {
       })
     );
 
-    // Admin/HOD/Teacher posts are auto-approved; students/alumni go to review
+    // Developer/HOD/Teacher posts are auto-approved; students/alumni go to review
     const status: ContentStatus = isManagementRole(authorRole) ? 'approved' : 'pending';
 
     return postRepository.create({
@@ -113,7 +113,7 @@ export class PostService {
 
   async getFeed(page: number, limit: number, sort: 'latest' | 'trending' = 'latest', authorId?: string, _userRole?: UserRole) {
     // Feed always shows only approved content for all users.
-    // Admin/HOD/Teacher use the Review Content screen to see pending items.
+    // Developer/HOD/Teacher use the Review Content screen to see pending items.
     const { posts, total } = await postRepository.findFeed(page, limit, sort, authorId, true);
     return {
       posts,

@@ -9,7 +9,7 @@ const router = Router();
 
 router.use(authenticate);
 
-// ── Reviewer endpoints (admin, hod, teacher) ────────────────────────────────
+// ── Reviewer endpoints (developer, hod, teacher) ────────────────────────────────
 
 // GET /moderation/pending/:type — list pending content for review
 router.get(

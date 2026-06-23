@@ -578,35 +578,35 @@
       ]
     },
     {
-      "name": "Admin",
+      "name": "Developer",
       "item": [
         {
           "name": "Get All Users",
-          "request": { "method": "GET", "url": "{{baseUrl}}/admin/users?page=1&limit=20" }
+          "request": { "method": "GET", "url": "{{baseUrl}}/developer/users?page=1&limit=20" }
         },
         {
           "name": "Get Analytics",
-          "request": { "method": "GET", "url": "{{baseUrl}}/admin/analytics" }
+          "request": { "method": "GET", "url": "{{baseUrl}}/developer/analytics" }
         },
         {
           "name": "Block User",
-          "request": { "method": "PUT", "url": "{{baseUrl}}/admin/users/USER_ID/block" }
+          "request": { "method": "PUT", "url": "{{baseUrl}}/developer/users/USER_ID/block" }
         },
         {
           "name": "Unblock User",
-          "request": { "method": "PUT", "url": "{{baseUrl}}/admin/users/USER_ID/unblock" }
+          "request": { "method": "PUT", "url": "{{baseUrl}}/developer/users/USER_ID/unblock" }
         },
         {
           "name": "Delete User",
-          "request": { "method": "DELETE", "url": "{{baseUrl}}/admin/users/USER_ID" }
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/developer/users/USER_ID" }
         },
         {
-          "name": "Delete Post (Admin)",
-          "request": { "method": "DELETE", "url": "{{baseUrl}}/admin/posts/{{postId}}" }
+          "name": "Delete Post (Developer)",
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/developer/posts/{{postId}}" }
         },
         {
-          "name": "Delete Opportunity (Admin)",
-          "request": { "method": "DELETE", "url": "{{baseUrl}}/admin/opportunities/OPPORTUNITY_ID" }
+          "name": "Delete Opportunity (Developer)",
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/developer/opportunities/OPPORTUNITY_ID" }
         }
       ]
     }

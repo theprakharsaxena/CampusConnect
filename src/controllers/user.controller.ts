@@ -1,5 +1,5 @@
 import { Response, NextFunction } from 'express';
-import { userService, adminService, userManagementService } from '../services/user.service';
+import { userService, developerService, userManagementService } from '../services/user.service';
 import { postService } from '../services/post.service';
 import { opportunityService } from '../services/opportunity.service';
 import { UserRole, AuthRequest } from '../types';
@@ -140,14 +140,14 @@ export class UserManagementController {
   };
 }
 
-export class AdminController {
+export class DeveloperController {
   getAllUsers = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { page, limit } = parsePagination(
         req.query.page as string,
         req.query.limit as string
       );
-      const result = await adminService.getAllUsers(page, limit);
+      const result = await developerService.getAllUsers(page, limit);
       sendSuccess(res, result.users, undefined, 200, result.pagination);
     } catch (error) {
       next(error);
@@ -156,7 +156,7 @@ export class AdminController {
 
   blockUser = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const user = await adminService.blockUser(getParam(req.params.id), req.user!.userId, req.user!.role);
+      const user = await developerService.blockUser(getParam(req.params.id), req.user!.userId, req.user!.role);
       sendSuccess(res, user, 'User blocked');
     } catch (error) {
       next(error);
@@ -165,7 +165,7 @@ export class AdminController {
 
   unblockUser = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const user = await adminService.unblockUser(getParam(req.params.id), req.user!.userId, req.user!.role);
+      const user = await developerService.unblockUser(getParam(req.params.id), req.user!.userId, req.user!.role);
       sendSuccess(res, user, 'User unblocked');
     } catch (error) {
       next(error);
@@ -174,7 +174,7 @@ export class AdminController {
 
   deleteUser = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      await adminService.deleteUser(getParam(req.params.id), req.user!.userId, req.user!.role);
+      await developerService.deleteUser(getParam(req.params.id), req.user!.userId, req.user!.role);
       sendSuccess(res, undefined, 'User deleted');
     } catch (error) {
       next(error);
@@ -201,7 +201,7 @@ export class AdminController {
 
   getAnalytics = async (_req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const analytics = await adminService.getAnalytics();
+      const analytics = await developerService.getAnalytics();
       sendSuccess(res, analytics);
     } catch (error) {
       next(error);
@@ -211,4 +211,4 @@ export class AdminController {
 
 export const userController = new UserController();
 export const userManagementController = new UserManagementController();
-export const adminController = new AdminController();
+export const developerController = new DeveloperController();

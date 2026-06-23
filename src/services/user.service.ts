@@ -187,7 +187,7 @@ export class UserManagementService {
   }
 }
 
-export class AdminService {
+export class DeveloperService {
   async getAllUsers(page: number, limit: number) {
     const { users, total } = await userRepository.findAll(page, limit);
     return {
@@ -202,9 +202,9 @@ export class AdminService {
     }
     const target = await userRepository.findById(userId);
     if (!target) throw new AppError('User not found', 404);
-    // HOD cannot block admin
+    // HOD cannot block developer
     if (actorRole === 'hod' && target.role === 'developer') {
-      throw new AppError('You do not have permission to block an admin', 403);
+      throw new AppError('You do not have permission to block an developer', 403);
     }
     const user = await userRepository.update(userId, { isBlocked: true });
     if (!user) throw new AppError('User not found', 404);
@@ -215,7 +215,7 @@ export class AdminService {
     if (actorRole === 'hod') {
       const target = await userRepository.findById(userId);
       if (target && target.role === 'developer') {
-        throw new AppError('You do not have permission to unblock an admin', 403);
+        throw new AppError('You do not have permission to unblock an developer', 403);
       }
     }
     const user = await userRepository.update(userId, { isBlocked: false });
@@ -229,9 +229,9 @@ export class AdminService {
     }
     const target = await userRepository.findById(userId);
     if (!target) throw new AppError('User not found', 404);
-    // HOD cannot delete admin
+    // HOD cannot delete developer
     if (actorRole === 'hod' && target.role === 'developer') {
-      throw new AppError('You do not have permission to delete an admin', 403);
+      throw new AppError('You do not have permission to delete an developer', 403);
     }
     await userRepository.delete(userId);
   }
@@ -285,4 +285,4 @@ export class AdminService {
 
 export const userService = new UserService();
 export const userManagementService = new UserManagementService();
-export const adminService = new AdminService();
+export const developerService = new DeveloperService();

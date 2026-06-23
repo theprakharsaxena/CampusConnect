@@ -36,12 +36,12 @@ export class CommentService {
     return comment;
   }
 
-  async deleteComment(commentId: string, userId: string, isAdmin = false): Promise<void> {
+  async deleteComment(commentId: string, userId: string, isDeveloper = false): Promise<void> {
     const comment = await commentRepository.findById(commentId);
     if (!comment) throw new AppError('Comment not found', 404);
 
     const commentUserId = comment.userId._id?.toString() || comment.userId.toString();
-    if (commentUserId !== userId && !isAdmin) {
+    if (commentUserId !== userId && !isDeveloper) {
       throw new AppError('Not authorized to delete this comment', 403);
     }
 

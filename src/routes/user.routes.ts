@@ -15,7 +15,7 @@ const router = Router();
 
 router.use(authenticate);
 
-// User management (admin, HOD — scoped by role)
+// User management (developer, HOD — scoped by role)
 router.get(
   '/manage/list',
   authorize('developer', 'hod'),
