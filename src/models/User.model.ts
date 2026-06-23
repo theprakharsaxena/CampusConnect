@@ -21,6 +21,7 @@ export interface IUser extends Document {
   isActive: boolean;
   isBlocked: boolean;
   refreshToken?: string;
+  fcmTokens: string[];
   passwordResetToken?: string;
   passwordResetExpires?: Date;
   createdAt: Date;
@@ -57,6 +58,7 @@ const userSchema = new Schema<IUser>(
     isActive: { type: Boolean, default: false },
     isBlocked: { type: Boolean, default: false },
     refreshToken: { type: String, select: false },
+    fcmTokens: [{ type: String }],
     passwordResetToken: { type: String, select: false },
     passwordResetExpires: { type: Date, select: false },
   },

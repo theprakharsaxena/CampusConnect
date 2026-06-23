@@ -1,6 +1,7 @@
 import { Notification, INotification } from '../models';
 import { NotificationType } from '../types';
 import { Types } from 'mongoose';
+import { sendPushToUser } from '../utils/firebase';
 
 export class NotificationRepository {
   async create(data: {
@@ -21,6 +22,12 @@ export class NotificationRepository {
       const io = getIO();
       io.to(`user:${data.userId}`).emit('new_notification', notification);
     } catch (_) {}
+
+    // Send push notification
+    sendPushToUser(data.userId, data.title, data.message, {
+      type: data.type,
+      ...(data.referenceId && { referenceId: data.referenceId }),
+    }).catch(() => {});
 
     return notification;
   }
@@ -58,6 +65,12 @@ export class NotificationRepository {
       const io = getIO();
       io.to(`user:${data.userId}`).emit('new_notification', notification);
     } catch (_) {}
+
+    // Send push notification for messages
+    sendPushToUser(data.userId, data.title, data.message, {
+      type: 'message',
+      referenceId: data.referenceId,
+    }).catch(() => {});
 
     return notification;
   }

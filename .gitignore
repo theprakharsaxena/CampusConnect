@@ -8,3 +8,4 @@ coverage/
 uploads/
 .vscode/
 .idea/
+firebase-service-account.json

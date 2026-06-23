@@ -1,6 +1,7 @@
 import { Post, IPost, Event, IEvent, Opportunity, IOpportunity } from '../models';
 import { AppError, buildPagination } from '../utils/response';
 import { ContentStatus } from '../models/Post.model';
+import { sendPushToAll, sendPushToUser } from '../utils/firebase';
 
 type ContentType = 'post' | 'event' | 'opportunity';
 
@@ -93,6 +94,43 @@ export class ModerationService {
     }
 
     if (!doc) throw new AppError('Content not found', 404);
+
+    // Send push notifications
+    const authorId = type === 'post'
+      ? (doc as IPost).author?._id?.toString()
+      : type === 'event'
+        ? (doc as IEvent).organizer?._id?.toString()
+        : (doc as IOpportunity).postedBy?._id?.toString();
+
+    if (authorId) {
+      if (status === 'approved') {
+        // Notify author their content is approved
+        sendPushToUser(authorId, 'Content Approved', `Your ${type} has been approved and is now live!`, {
+          type: 'content_approved',
+          contentType: type,
+          contentId: contentId,
+        }).catch(() => {});
+
+        // Notify all users about new content
+        const title = type === 'post'
+          ? 'New Post'
+          : type === 'event'
+            ? 'New Event'
+            : 'New Opportunity';
+        sendPushToAll(title, `A new ${type} has been published. Check it out!`, {
+          type: 'new_content',
+          contentType: type,
+          contentId: contentId,
+        }, authorId).catch(() => {});
+      } else if (status === 'rejected') {
+        sendPushToUser(authorId, 'Content Rejected', `Your ${type} was not approved.${rejectionReason ? ' Reason: ' + rejectionReason : ''}`, {
+          type: 'content_rejected',
+          contentType: type,
+          contentId: contentId,
+        }).catch(() => {});
+      }
+    }
+
     return doc;
   }
 

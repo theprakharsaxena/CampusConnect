@@ -240,6 +240,20 @@ export class AuthService {
     return sanitizeUser(user);
   }
 
+  async registerDeviceToken(userId: string, fcmToken: string): Promise<void> {
+    const user = await userRepository.findById(userId);
+    if (!user) throw new AppError('User not found', 404);
+
+    // Add token if not already present (avoid duplicates)
+    const tokens = user.fcmTokens || [];
+    if (!tokens.includes(fcmToken)) {
+      tokens.push(fcmToken);
+      // Keep only last 5 tokens (user may have multiple devices)
+      const trimmed = tokens.slice(-5);
+      await userRepository.update(userId, { fcmTokens: trimmed });
+    }
+  }
+
   private generateTokens(user: IUser): { accessToken: string; refreshToken: string } {
     const payload = {
       userId: user._id.toString(),

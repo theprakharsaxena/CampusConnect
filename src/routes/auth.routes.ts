@@ -39,6 +39,7 @@ router.post('/reset-password', resetPasswordValidator, validate, authController.
 router.use(authenticate);
 
 router.post('/logout', authController.logout);
+router.post('/register-device', authController.registerDevice);
 router.post('/change-password', changePasswordValidator, validate, authController.changePassword);
 router.get('/me', authController.getCurrentUser);
 

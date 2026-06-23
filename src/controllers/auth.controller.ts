@@ -110,6 +110,20 @@ export class AuthController {
       next(error);
     }
   };
+
+  registerDevice = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { fcmToken } = req.body;
+      if (!fcmToken) {
+        sendSuccess(res, undefined, 'Token is required');
+        return;
+      }
+      await authService.registerDeviceToken(req.user!.userId, fcmToken);
+      sendSuccess(res, undefined, 'Device registered');
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 export const authController = new AuthController();
