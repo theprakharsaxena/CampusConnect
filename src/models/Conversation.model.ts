@@ -5,6 +5,7 @@ export interface IConversation extends Document {
   participants: Types.ObjectId[];
   lastMessage?: Types.ObjectId;
   lastMessageAt?: Date;
+  deletedFor: Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -16,6 +17,9 @@ const conversationSchema = new Schema<IConversation>(
     ],
     lastMessage: { type: Schema.Types.ObjectId, ref: 'Message' },
     lastMessageAt: { type: Date },
+    deletedFor: [
+      { type: Schema.Types.ObjectId, ref: 'User', default: [] },
+    ],
   },
   { timestamps: true }
 );

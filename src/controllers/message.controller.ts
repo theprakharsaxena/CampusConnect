@@ -79,6 +79,15 @@ export class MessageController {
       next(error);
     }
   };
+
+  deleteConversation = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      await messageService.deleteConversation(getParam(req.params.conversationId), req.user!.userId);
+      sendSuccess(res, undefined, 'Conversation deleted successfully');
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 export const messageController = new MessageController();

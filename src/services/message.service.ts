@@ -3,6 +3,7 @@ import {
   messageRepository,
 } from '../repositories/message.repository';
 import { notificationRepository } from '../repositories/notification.repository';
+import { Types } from 'mongoose';
 import { AppError, buildPagination } from '../utils/response';
 import { IConversation, IMessage } from '../models';
 import { isUserInConversationRoom, getIO, getOnlineUsers } from '../sockets';
@@ -174,6 +175,35 @@ export class MessageService {
     if (!conversation) throw new AppError('Conversation not found', 404);
 
     await messageRepository.markAsSeen(conversationId, userId);
+  }
+
+  async deleteConversation(conversationId: string, userId: string): Promise<void> {
+    const conversation = await conversationRepository.findById(conversationId);
+    if (!conversation) throw new AppError('Conversation not found', 404);
+
+    const isParticipant = conversation.participants.some(
+      (p) => (p._id?.toString() || p.toString()) === userId
+    );
+    if (!isParticipant) {
+      throw new AppError('Not a participant of this conversation', 403);
+    }
+
+    // Add userId to deletedFor if not already there
+    const deletedForStr = conversation.deletedFor.map((id) => id.toString());
+    if (!deletedForStr.includes(userId)) {
+      conversation.deletedFor.push(new Types.ObjectId(userId) as any);
+      await conversation.save();
+    }
+
+    // Check if all participants deleted the conversation
+    const participantsStr = conversation.participants.map((p) => p._id?.toString() || p.toString());
+    const updatedDeletedForStr = conversation.deletedFor.map((id) => id.toString());
+    const allDeleted = participantsStr.every((pId) => updatedDeletedForStr.includes(pId));
+
+    if (allDeleted) {
+      await messageRepository.deleteByConversationId(conversationId);
+      await conversationRepository.deleteById(conversationId);
+    }
   }
 }
 

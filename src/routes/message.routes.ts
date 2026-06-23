@@ -43,5 +43,11 @@ router.put(
   validate,
   messageController.markAsRead
 );
+router.delete(
+  '/conversations/:conversationId',
+  conversationIdParamValidator,
+  validate,
+  messageController.deleteConversation
+);
 
 export default router;

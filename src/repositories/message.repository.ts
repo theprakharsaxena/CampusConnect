@@ -27,7 +27,10 @@ export class ConversationRepository {
     limit: number
   ): Promise<{ conversations: IConversation[]; total: number }> {
     const skip = (page - 1) * limit;
-    const filter = { participants: userId };
+    const filter = { 
+      participants: userId,
+      deletedFor: { $ne: userId as any }
+    };
 
     const [conversations, total] = await Promise.all([
       Conversation.find(filter)
@@ -50,6 +53,10 @@ export class ConversationRepository {
       lastMessage: messageId,
       lastMessageAt: new Date(),
     });
+  }
+
+  async deleteById(id: string): Promise<void> {
+    await Conversation.findByIdAndDelete(id);
   }
 }
 
@@ -104,6 +111,10 @@ export class MessageRepository {
         deliveredAt: new Date() 
       }
     );
+  }
+
+  async deleteByConversationId(conversationId: string): Promise<void> {
+    await Message.deleteMany({ conversationId });
   }
 
   async countUnseenByConversations(
