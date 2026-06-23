@@ -4,22 +4,43 @@ import path from 'path';
 import fs from 'fs';
 
 // Initialize Firebase Admin SDK
-const serviceAccountPath = path.resolve(process.cwd(), 'firebase-service-account.json');
-
+// Priority: 1. Environment variable  2. JSON file
 let firebaseApp: App | undefined;
 
-if (fs.existsSync(serviceAccountPath)) {
-  const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf-8'));
+const envServiceAccount = process.env.FIREBASE_SERVICE_ACCOUNT;
+const serviceAccountPath = path.resolve(process.cwd(), 'firebase-service-account.json');
+
+let serviceAccount: Record<string, unknown> | null = null;
+
+if (envServiceAccount) {
+  try {
+    // Try parsing directly first (if valid JSON)
+    serviceAccount = JSON.parse(envServiceAccount);
+  } catch {
+    try {
+      // Try base64 decoding (recommended for .env files)
+      const decoded = Buffer.from(envServiceAccount, 'base64').toString('utf-8');
+      serviceAccount = JSON.parse(decoded);
+    } catch (e2) {
+      console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT env var:', e2);
+    }
+  }
+} else if (fs.existsSync(serviceAccountPath)) {
+  serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf-8'));
+}
+
+if (serviceAccount) {
   if (getApps().length === 0) {
     firebaseApp = initializeApp({
-      credential: cert(serviceAccount),
+      credential: cert(serviceAccount as Parameters<typeof cert>[0]),
     });
   } else {
     firebaseApp = getApps()[0];
   }
   console.log('Firebase Admin SDK initialized');
 } else {
-  console.warn('firebase-service-account.json not found — push notifications disabled');
+  console.warn('Firebase credentials not found — push notifications disabled');
+  console.warn('Set FIREBASE_SERVICE_ACCOUNT env var or place firebase-service-account.json in project root');
 }
 
 /**
