@@ -71,11 +71,11 @@ export class AuthController {
 
   forgotPassword = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const result = await authService.forgotPassword(req.body.email);
+      await authService.forgotPassword(req.body.email);
       sendSuccess(
         res,
-        result,
-        'If the email exists, a reset link has been sent'
+        undefined,
+        'If the email exists, a password reset code has been sent'
       );
     } catch (error) {
       next(error);

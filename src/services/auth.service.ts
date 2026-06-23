@@ -10,7 +10,7 @@ import { EmailVerification, IUser } from '../models';
 import { UserRole } from '../types';
 import crypto from 'crypto';
 import { config } from '../config';
-import { sendVerificationEmail } from '../utils/mailer';
+import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/mailer';
 import { getDefaultIsActiveForRole } from '../utils/permissions';
 
 interface RegisterInput {
@@ -174,22 +174,22 @@ export class AuthService {
     await userRepository.update(userId, { refreshToken: null });
   }
 
-  async forgotPassword(email: string): Promise<{ resetToken: string }> {
+  async forgotPassword(email: string): Promise<void> {
     const user = await userRepository.findByEmail(email, true);
     if (!user) {
-      // Don't reveal if email exists
-      return { resetToken: '' };
+      throw new AppError('No account found with this email address', 404);
     }
 
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    // Generate a 6-digit reset code and send it to the user's email
+    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const hashedToken = crypto.createHash('sha256').update(resetCode).digest('hex');
 
     await userRepository.update(user._id.toString(), {
       passwordResetToken: hashedToken,
-      passwordResetExpires: new Date(Date.now() + 3600000),
+      passwordResetExpires: new Date(Date.now() + 3600000), // 1 hour
     });
 
-    return { resetToken };
+    await sendPasswordResetEmail(email, resetCode);
   }
 
   async resetPassword(token: string, newPassword: string): Promise<void> {
@@ -202,7 +202,7 @@ export class AuthService {
     }).select('+password +passwordResetToken +passwordResetExpires');
 
     if (!userWithToken) {
-      throw new AppError('Invalid or expired reset token', 400);
+      throw new AppError('Invalid or expired reset code', 400);
     }
 
     const hashedPassword = await hashPassword(newPassword);

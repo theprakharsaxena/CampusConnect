@@ -40,3 +40,30 @@ export const sendVerificationEmail = async (
     `,
   });
 };
+
+export const sendPasswordResetEmail = async (
+  email: string,
+  resetToken: string,
+): Promise<void> => {
+  if (!config.smtp.host) {
+    throw new Error(
+      "SMTP is not configured. Set SMTP_HOST, SMTP_USER, SMTP_PASS.",
+    );
+  }
+
+  await transporter.sendMail({
+    from: config.smtp.from,
+    to: email,
+    subject: "CampusConnect Password Reset",
+    text: `Your password reset code is: ${resetToken}\n\nThis code expires in 1 hour. If you did not request a password reset, please ignore this email.`,
+    html: `
+      <div style="font-family: Arial, sans-serif;">
+        <h2>CampusConnect Password Reset</h2>
+        <p>You requested a password reset. Use the code below to reset your password:</p>
+        <p style="font-size: 24px; font-weight: bold; letter-spacing: 4px;">${resetToken}</p>
+        <p>This code expires in 1 hour.</p>
+        <p style="color: #666;">If you did not request this, please ignore this email.</p>
+      </div>
+    `,
+  });
+};
