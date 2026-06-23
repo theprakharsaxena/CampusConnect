@@ -83,6 +83,12 @@ export class MessageService {
       throw new AppError('Not a participant of this conversation', 403);
     }
 
+    // Clear deletedFor so the conversation reappears in the chat list for all participants
+    if (conversation.deletedFor && conversation.deletedFor.length > 0) {
+      conversation.deletedFor = [];
+      await conversation.save();
+    }
+
     const recipient = conversation.participants.find(
       (p) => (p._id?.toString() || p.toString()) !== senderId
     );
