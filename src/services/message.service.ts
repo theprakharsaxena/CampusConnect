@@ -88,9 +88,11 @@ export class MessageService {
     
     let isOnline = false;
     let recipientId = '';
+    let isRecipientInRoom = false;
     if (recipient) {
       recipientId = recipient._id?.toString() || recipient.toString();
       isOnline = getOnlineUsers().includes(recipientId);
+      isRecipientInRoom = isUserInConversationRoom(recipientId, conversationId);
     }
 
     const message = await messageRepository.create({
@@ -98,8 +100,10 @@ export class MessageService {
       sender: senderId as unknown as IMessage['sender'],
       text,
       attachments,
-      delivered: isOnline,
-      deliveredAt: isOnline ? new Date() : undefined,
+      delivered: isOnline || isRecipientInRoom,
+      deliveredAt: (isOnline || isRecipientInRoom) ? new Date() : undefined,
+      seen: isRecipientInRoom,
+      seenAt: isRecipientInRoom ? new Date() : undefined,
     });
 
     await conversationRepository.updateLastMessage(conversationId, message._id.toString());
@@ -115,7 +119,6 @@ export class MessageService {
       } catch (_) {}
 
       // Skip notification if recipient is already viewing this conversation
-      const isRecipientInRoom = isUserInConversationRoom(recipientId, conversationId);
       if (!isRecipientInRoom) {
         await notificationRepository.createOrUpdateMessageNotification({
           userId: recipientId,
