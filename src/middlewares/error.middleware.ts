@@ -11,7 +11,7 @@ export const errorHandler = (
   // Multer errors (file too large, too many files, wrong type, etc.)
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE') {
-      sendError(res, 'File too large. Maximum allowed size per image is 5 MB.', 413);
+      sendError(res, 'File too large. Maximum allowed size is 10 MB.', 413);
     } else if (err.code === 'LIMIT_FILE_COUNT') {
       sendError(res, 'Too many files. Maximum 5 images per post.', 400);
     } else {

@@ -25,7 +25,7 @@ export const upload = multer({
   storage,
   fileFilter,
   limits: {
-    // Client compresses images to ≤5 MB before sending.
-    fileSize: 5 * 1024 * 1024, // 5 MB
+    // Client compresses images before sending. 10 MB ceiling as safety net.
+    fileSize: 10 * 1024 * 1024, // 10 MB
   },
 });
