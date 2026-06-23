@@ -116,6 +116,10 @@ export class MessageService {
           conversationId,
           lastMessage: { text, sender: senderId },
         });
+        io.to(`user:${senderId}`).emit('conversation_updated', {
+          conversationId,
+          lastMessage: { text, sender: senderId },
+        });
       } catch (_) {}
 
       // Skip notification if recipient is already viewing this conversation
