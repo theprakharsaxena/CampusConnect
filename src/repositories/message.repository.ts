@@ -83,7 +83,26 @@ export class MessageRepository {
         sender: { $ne: userId },
         seen: false,
       },
-      { seen: true, seenAt: new Date() }
+      { 
+        seen: true, 
+        seenAt: new Date(),
+        delivered: true,
+        deliveredAt: new Date()
+      }
+    );
+  }
+
+  async markAsDelivered(conversationIds: string[], userId: string): Promise<void> {
+    await Message.updateMany(
+      {
+        conversationId: { $in: conversationIds },
+        sender: { $ne: userId },
+        delivered: false,
+      },
+      { 
+        delivered: true, 
+        deliveredAt: new Date() 
+      }
     );
   }
 

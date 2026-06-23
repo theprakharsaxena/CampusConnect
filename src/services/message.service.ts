@@ -5,7 +5,7 @@ import {
 import { notificationRepository } from '../repositories/notification.repository';
 import { AppError, buildPagination } from '../utils/response';
 import { IConversation, IMessage } from '../models';
-import { isUserInConversationRoom, getIO } from '../sockets';
+import { isUserInConversationRoom, getIO, getOnlineUsers } from '../sockets';
 
 export class MessageService {
   async createConversation(
@@ -34,6 +34,21 @@ export class MessageService {
 
     // Get unseen message counts per conversation
     const conversationIds = conversations.map((c) => c._id.toString());
+    
+    // Mark these as delivered since the user is fetching their conversation list
+    if (conversationIds.length > 0) {
+      await messageRepository.markAsDelivered(conversationIds, userId);
+      try {
+        const io = getIO();
+        for (const cid of conversationIds) {
+          io.to(`conversation:${cid}`).emit('messages_delivered', {
+            conversationId: cid,
+            deliveredTo: userId,
+          });
+        }
+      } catch (_) {}
+    }
+
     const unreadCounts = conversationIds.length > 0
       ? await messageRepository.countUnseenByConversations(conversationIds, userId)
       : {};
@@ -67,21 +82,29 @@ export class MessageService {
       throw new AppError('Not a participant of this conversation', 403);
     }
 
+    const recipient = conversation.participants.find(
+      (p) => (p._id?.toString() || p.toString()) !== senderId
+    );
+    
+    let isOnline = false;
+    let recipientId = '';
+    if (recipient) {
+      recipientId = recipient._id?.toString() || recipient.toString();
+      isOnline = getOnlineUsers().includes(recipientId);
+    }
+
     const message = await messageRepository.create({
       conversationId: conversationId as unknown as IMessage['conversationId'],
       sender: senderId as unknown as IMessage['sender'],
       text,
       attachments,
+      delivered: isOnline,
+      deliveredAt: isOnline ? new Date() : undefined,
     });
 
     await conversationRepository.updateLastMessage(conversationId, message._id.toString());
 
-    const recipient = conversation.participants.find(
-      (p) => (p._id?.toString() || p.toString()) !== senderId
-    );
-    if (recipient) {
-      const recipientId = recipient._id?.toString() || recipient.toString();
-
+    if (recipient && recipientId) {
       // Always emit conversation_updated so the messages list screen refreshes
       try {
         const io = getIO();
@@ -119,6 +142,14 @@ export class MessageService {
     }
 
     await messageRepository.markAsSeen(conversationId, userId);
+
+    try {
+      const io = getIO();
+      io.to(`conversation:${conversationId}`).emit('messages_delivered', {
+        conversationId,
+        deliveredTo: userId,
+      });
+    } catch (_) {}
 
     const { messages, total } = await messageRepository.findByConversationId(
       conversationId,

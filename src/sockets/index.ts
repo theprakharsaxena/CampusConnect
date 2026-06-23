@@ -3,6 +3,8 @@ import { Server, Socket } from "socket.io";
 import { verifyAccessToken } from "../utils/jwt";
 import { messageService } from "../services/message.service";
 import { config } from "../config";
+import { Conversation } from "../models/Conversation.model";
+import { messageRepository } from "../repositories/message.repository";
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;
@@ -42,12 +44,29 @@ export const initializeSocket = (httpServer: HttpServer): Server => {
     }
   });
 
-  io.on("connection", (socket: AuthenticatedSocket) => {
+  io.on("connection", async (socket: AuthenticatedSocket) => {
     const userId = socket.userId!;
     onlineUsers.set(userId, socket.id);
 
     socket.join(`user:${userId}`);
     io.emit("online_users", Array.from(onlineUsers.keys()));
+
+    // Mark undelivered messages sent to this user as delivered
+    try {
+      const conversations = await Conversation.find({ participants: userId });
+      const conversationIds = conversations.map((c) => c._id.toString());
+      if (conversationIds.length > 0) {
+        await messageRepository.markAsDelivered(conversationIds, userId);
+        for (const cid of conversationIds) {
+          io.to(`conversation:${cid}`).emit("messages_delivered", {
+            conversationId: cid,
+            deliveredTo: userId,
+          });
+        }
+      }
+    } catch (err) {
+      console.error("Error marking messages as delivered on connect:", err);
+    }
 
     socket.on("join_conversation", (conversationId: string) => {
       socket.join(`conversation:${conversationId}`);
