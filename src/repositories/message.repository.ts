@@ -27,22 +27,23 @@ export class ConversationRepository {
     limit: number
   ): Promise<{ conversations: IConversation[]; total: number }> {
     const skip = (page - 1) * limit;
-    const filter = { 
-      participants: userId,
-      deletedFor: { $ne: userId as any }
-    };
 
-    const [conversations, total] = await Promise.all([
-      Conversation.find(filter)
-        .populate('participants', 'name email profileImage')
-        .populate('lastMessage')
-        .skip(skip)
-        .limit(limit)
-        .sort({ lastMessageAt: -1 }),
-      Conversation.countDocuments(filter),
-    ]);
+    const conversations = await Conversation.find({ participants: userId })
+      .populate('participants', 'name email profileImage')
+      .populate('lastMessage')
+      .sort({ lastMessageAt: -1 });
 
-    return { conversations, total };
+    const filtered = conversations.filter((c) => {
+      const deletionEntry = c.deletedFor.find(
+        (d) => d.userId.toString() === userId
+      );
+      if (!deletionEntry) return true;
+      if (!c.lastMessageAt) return false;
+      return c.lastMessageAt > deletionEntry.deletedAt;
+    });
+
+    const paginated = filtered.slice(skip, skip + limit);
+    return { conversations: paginated, total: filtered.length };
   }
 
   async updateLastMessage(
@@ -68,17 +69,29 @@ export class MessageRepository {
 
   async findByConversationId(
     conversationId: string,
+    userId: string,
     page: number,
     limit: number
   ): Promise<{ messages: IMessage[]; total: number }> {
     const skip = (page - 1) * limit;
+
+    const conversation = await Conversation.findById(conversationId);
+    const deletionEntry = conversation?.deletedFor?.find(
+      (d) => d.userId.toString() === userId
+    );
+
+    const query: any = { conversationId };
+    if (deletionEntry) {
+      query.createdAt = { $gt: deletionEntry.deletedAt };
+    }
+
     const [messages, total] = await Promise.all([
-      Message.find({ conversationId })
+      Message.find(query)
         .populate('sender', 'name email profileImage')
         .skip(skip)
         .limit(limit)
         .sort({ createdAt: -1 }),
-      Message.countDocuments({ conversationId }),
+      Message.countDocuments(query),
     ]);
     return { messages, total };
   }
@@ -119,12 +132,28 @@ export class MessageRepository {
 
   async countUnseenByConversations(
     conversationIds: string[],
-    userId: string
+    userId: string,
+    deletionsMap: Record<string, Date> = {}
   ): Promise<Record<string, number>> {
+    const matchConditions: any[] = [];
+    for (const cid of conversationIds) {
+      const deletedAt = deletionsMap[cid];
+      if (deletedAt) {
+        matchConditions.push({
+          conversationId: new Types.ObjectId(cid),
+          createdAt: { $gt: deletedAt },
+        });
+      } else {
+        matchConditions.push({
+          conversationId: new Types.ObjectId(cid),
+        });
+      }
+    }
+
     const results = await Message.aggregate([
       {
         $match: {
-          conversationId: { $in: conversationIds.map((id) => new Types.ObjectId(id)) },
+          $or: matchConditions,
           sender: { $ne: new Types.ObjectId(userId) },
           seen: false,
         },

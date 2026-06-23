@@ -1,11 +1,16 @@
 import { Schema, model, Document, Types } from 'mongoose';
 
+export interface IConversationDeletedFor {
+  userId: Types.ObjectId;
+  deletedAt: Date;
+}
+
 export interface IConversation extends Document {
   _id: Types.ObjectId;
   participants: Types.ObjectId[];
   lastMessage?: Types.ObjectId;
   lastMessageAt?: Date;
-  deletedFor: Types.ObjectId[];
+  deletedFor: IConversationDeletedFor[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -18,7 +23,10 @@ const conversationSchema = new Schema<IConversation>(
     lastMessage: { type: Schema.Types.ObjectId, ref: 'Message' },
     lastMessageAt: { type: Date },
     deletedFor: [
-      { type: Schema.Types.ObjectId, ref: 'User', default: [] },
+      {
+        userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+        deletedAt: { type: Date, required: true, default: Date.now },
+      },
     ],
   },
   { timestamps: true }

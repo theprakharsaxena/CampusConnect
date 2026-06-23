@@ -50,14 +50,29 @@ export class MessageService {
       } catch (_) {}
     }
 
+    const deletionsMap: Record<string, Date> = {};
+    for (const c of conversations) {
+      const entry = c.deletedFor?.find((d) => d.userId.toString() === userId);
+      if (entry) {
+        deletionsMap[c._id.toString()] = entry.deletedAt;
+      }
+    }
+
     const unreadCounts = conversationIds.length > 0
-      ? await messageRepository.countUnseenByConversations(conversationIds, userId)
+      ? await messageRepository.countUnseenByConversations(conversationIds, userId, deletionsMap)
       : {};
 
     // Attach unread counts to each conversation
     const conversationsWithUnread = conversations.map((c) => {
       const conv = c.toObject();
       conv.unreadCount = unreadCounts[c._id.toString()] || 0;
+      
+      const deletionEntry = c.deletedFor?.find((d) => d.userId.toString() === userId);
+      if (deletionEntry && conv.lastMessage && conv.lastMessage.createdAt) {
+        if (new Date(conv.lastMessage.createdAt) <= deletionEntry.deletedAt) {
+          conv.lastMessage = null;
+        }
+      }
       return conv;
     });
 
@@ -81,12 +96,6 @@ export class MessageService {
     );
     if (!isParticipant) {
       throw new AppError('Not a participant of this conversation', 403);
-    }
-
-    // Clear deletedFor so the conversation reappears in the chat list for all participants
-    if (conversation.deletedFor && conversation.deletedFor.length > 0) {
-      conversation.deletedFor = [];
-      await conversation.save();
     }
 
     const recipient = conversation.participants.find(
@@ -167,6 +176,7 @@ export class MessageService {
 
     const { messages, total } = await messageRepository.findByConversationId(
       conversationId,
+      userId,
       page,
       limit
     );
@@ -194,16 +204,23 @@ export class MessageService {
       throw new AppError('Not a participant of this conversation', 403);
     }
 
-    // Add userId to deletedFor if not already there
-    const deletedForStr = conversation.deletedFor.map((id) => id.toString());
-    if (!deletedForStr.includes(userId)) {
-      conversation.deletedFor.push(new Types.ObjectId(userId) as any);
-      await conversation.save();
+    // Add/Update userId in deletedFor
+    const index = conversation.deletedFor.findIndex(
+      (d) => d.userId.toString() === userId
+    );
+    if (index !== -1) {
+      conversation.deletedFor[index].deletedAt = new Date();
+    } else {
+      conversation.deletedFor.push({
+        userId: new Types.ObjectId(userId) as any,
+        deletedAt: new Date(),
+      });
     }
+    await conversation.save();
 
     // Check if all participants deleted the conversation
     const participantsStr = conversation.participants.map((p) => p._id?.toString() || p.toString());
-    const updatedDeletedForStr = conversation.deletedFor.map((id) => id.toString());
+    const updatedDeletedForStr = conversation.deletedFor.map((id) => id.userId.toString());
     const allDeleted = participantsStr.every((pId) => updatedDeletedForStr.includes(pId));
 
     if (allDeleted) {
