@@ -86,6 +86,21 @@ export class ConnectionRepository {
 
     return { requests, total };
   }
+  async findStatusBetweenUsers(
+    userId1: string,
+    userId2: string
+  ): Promise<IConnection | null> {
+    return Connection.findOne({
+      $or: [
+        { sender: userId1, receiver: userId2 },
+        { sender: userId2, receiver: userId1 },
+      ],
+      status: { $in: ['pending', 'accepted'] },
+    }).populate([
+      { path: 'sender', select: 'name email profileImage role department' },
+      { path: 'receiver', select: 'name email profileImage role department' },
+    ]);
+  }
 }
 
 export const connectionRepository = new ConnectionRepository();

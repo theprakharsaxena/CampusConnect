@@ -123,6 +123,10 @@ export class ConnectionService {
     };
   }
 
+  async getConnectionStatus(userId: string, otherUserId: string): Promise<IConnection | null> {
+    return connectionRepository.findStatusBetweenUsers(userId, otherUserId);
+  }
+
   async getPendingRequests(userId: string, page: number, limit: number) {
     const { requests, total } = await connectionRepository.findPendingRequests(
       userId,

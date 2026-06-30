@@ -22,6 +22,7 @@ router.post(
 );
 router.get('/', paginationValidator, validate, connectionController.getConnections);
 router.get('/pending', paginationValidator, validate, connectionController.getPending);
+router.get('/status/:userId', connectionController.getStatus);
 router.put('/:id/accept', requireActive, mongoIdValidator, validate, connectionController.accept);
 router.put('/:id/reject', requireActive, mongoIdValidator, validate, connectionController.reject);
 router.delete(

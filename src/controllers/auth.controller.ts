@@ -62,7 +62,8 @@ export class AuthController {
 
   logout = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      await authService.logout(req.user!.userId);
+      const fcmToken = req.body.fcmToken as string | undefined;
+      await authService.logout(req.user!.userId, fcmToken);
       sendSuccess(res, undefined, 'Logged out successfully');
     } catch (error) {
       next(error);

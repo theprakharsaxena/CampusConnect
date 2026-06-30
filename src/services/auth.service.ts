@@ -170,8 +170,18 @@ export class AuthService {
     }
   }
 
-  async logout(userId: string): Promise<void> {
-    await userRepository.update(userId, { refreshToken: null });
+  async logout(userId: string, fcmToken?: string): Promise<void> {
+    const updateData: Record<string, unknown> = { refreshToken: null };
+    await userRepository.update(userId, updateData);
+
+    // Remove the device's FCM token so this user stops receiving pushes on this device
+    if (fcmToken) {
+      const { User } = await import('../models');
+      await User.updateOne(
+        { _id: userId },
+        { $pull: { fcmTokens: fcmToken } }
+      );
+    }
   }
 
   async forgotPassword(email: string): Promise<void> {
@@ -243,6 +253,13 @@ export class AuthService {
   async registerDeviceToken(userId: string, fcmToken: string): Promise<void> {
     const user = await userRepository.findById(userId);
     if (!user) throw new AppError('User not found', 404);
+
+    // Remove this token from any OTHER user who had it (device switched accounts)
+    const { User } = await import('../models');
+    await User.updateMany(
+      { _id: { $ne: userId }, fcmTokens: fcmToken },
+      { $pull: { fcmTokens: fcmToken } }
+    );
 
     // Add token if not already present (avoid duplicates)
     const tokens = user.fcmTokens || [];

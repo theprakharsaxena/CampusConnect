@@ -71,6 +71,19 @@ export class ConnectionController {
     }
   };
 
+  getStatus = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const otherUserId = getParam(req.params.userId);
+      const connection = await connectionService.getConnectionStatus(
+        req.user!.userId,
+        otherUserId
+      );
+      sendSuccess(res, connection);
+    } catch (error) {
+      next(error);
+    }
+  };
+
   getPending = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { page, limit } = parsePagination(
