@@ -9,6 +9,7 @@ export class NotificationRepository {
     title: string;
     message: string;
     referenceId?: string;
+    actorImage?: string;
   }): Promise<INotification> {
     const notification = await Notification.create({
       ...data,
@@ -27,6 +28,7 @@ export class NotificationRepository {
       sendPushToUser(data.userId, data.title, data.message, {
         type: data.type,
         referenceId: data.referenceId || '',
+        ...(data.actorImage && { actorImage: data.actorImage }),
       }).catch(() => {});
     }).catch(() => {});
 
@@ -39,6 +41,7 @@ export class NotificationRepository {
     title: string;
     message: string;
     referenceId: string;
+    actorImage?: string;
   }): Promise<INotification> {
     const existing = await Notification.findOne({
       userId: new Types.ObjectId(data.userId),
@@ -72,6 +75,7 @@ export class NotificationRepository {
       sendPushToUser(data.userId, data.title, data.message, {
         type: 'message',
         referenceId: data.referenceId,
+        ...(data.actorImage && { actorImage: data.actorImage }),
       }).catch(() => {});
     }).catch(() => {});
 

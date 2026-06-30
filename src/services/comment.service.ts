@@ -24,12 +24,15 @@ export class CommentService {
 
     const authorId = (post.author as IUser)._id?.toString() || (post.author as unknown as string).toString();
     if (authorId !== userId) {
+      const commenterName = (comment.userId as any).name || 'Someone';
+      const commenterImage = (comment.userId as any).profileImage || '';
       await notificationRepository.create({
         userId: authorId,
         type: 'comment',
-        title: 'New Comment',
-        message: 'Someone commented on your post',
+        title: commenterName,
+        message: 'Commented on your post',
         referenceId: postId,
+        actorImage: commenterImage,
       });
     }
 

@@ -1,5 +1,6 @@
 import { postRepository } from '../repositories/post.repository';
 import { notificationRepository } from '../repositories/notification.repository';
+import { userRepository } from '../repositories/user.repository';
 import { AppError, buildPagination } from '../utils/response';
 import { uploadToCloudinary } from '../utils/cloudinary';
 import { IPost } from '../models';
@@ -137,12 +138,16 @@ export class PostService {
 
     const authorId = (post.author as IUser)._id?.toString() || (post.author as unknown as string).toString();
     if (authorId !== userId) {
+      const liker = await userRepository.findById(userId);
+      const likerName = liker?.name || 'Someone';
+      const likerImage = liker?.profileImage || '';
       await notificationRepository.create({
         userId: authorId,
         type: 'like',
-        title: 'New Like',
-        message: 'Someone liked your post',
+        title: likerName,
+        message: 'Liked your post',
         referenceId: postId,
+        actorImage: likerImage,
       });
     }
 

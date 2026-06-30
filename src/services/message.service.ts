@@ -140,12 +140,18 @@ export class MessageService {
 
       // Skip notification if recipient is already viewing this conversation
       if (!isRecipientInRoom) {
+        const senderParticipant = conversation.participants.find(
+          (p) => (p._id?.toString() || p.toString()) === senderId
+        );
+        const senderName = (senderParticipant as any)?.name || 'Someone';
+        const senderImage = (senderParticipant as any)?.profileImage || '';
         await notificationRepository.createOrUpdateMessageNotification({
           userId: recipientId,
           type: 'message',
-          title: 'New Message',
+          title: senderName,
           message: text.substring(0, 100),
           referenceId: conversationId,
+          actorImage: senderImage,
         });
       }
     }

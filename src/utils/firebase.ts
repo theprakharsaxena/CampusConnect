@@ -58,10 +58,16 @@ export const sendPushNotification = async (
   if (validTokens.length === 0) return;
 
   try {
+    // Notification+data message: Android auto-shows in background (with app icon).
+    // In foreground, Flutter intercepts and shows custom notification with user avatar.
     const message: MulticastMessage = {
       tokens: validTokens,
       notification: { title, body },
-      data: data || {},
+      data: {
+        ...(data || {}),
+        title,
+        body,
+      },
       android: {
         priority: 'high',
         notification: {

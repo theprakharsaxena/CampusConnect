@@ -28,12 +28,15 @@ export class ConnectionService {
       status: 'pending',
     });
 
+    const senderName = (connection.sender as any).name || 'Someone';
+    const senderImage = (connection.sender as any).profileImage || '';
     await notificationRepository.create({
       userId: receiverId,
       type: 'connection',
-      title: 'Connection Request',
-      message: 'You have a new connection request',
+      title: senderName,
+      message: 'Sent you a connection request',
       referenceId: connection._id.toString(),
+      actorImage: senderImage,
     });
 
     return connection;
@@ -56,12 +59,15 @@ export class ConnectionService {
     if (!updated) throw new AppError('Connection request not found', 404);
 
     const senderId = connection.sender._id?.toString() || connection.sender.toString();
+    const receiverName = (connection.receiver as any).name || 'Someone';
+    const receiverImage = (connection.receiver as any).profileImage || '';
     await notificationRepository.create({
       userId: senderId,
       type: 'connection',
-      title: 'Connection Accepted',
-      message: 'Your connection request was accepted',
+      title: receiverName,
+      message: 'Accepted your connection request',
       referenceId: connectionId,
+      actorImage: receiverImage,
     });
 
     return updated;
