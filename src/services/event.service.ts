@@ -1,4 +1,7 @@
 import { eventRepository } from '../repositories/event.repository';
+import { notificationRepository } from '../repositories/notification.repository';
+import { connectionRepository } from '../repositories/connection.repository';
+import { userRepository } from '../repositories/user.repository';
 import { AppError, buildPagination } from '../utils/response';
 import { uploadToCloudinary } from '../utils/cloudinary';
 import { IEvent } from '../models';
@@ -23,11 +26,45 @@ export class EventService {
 
     const status: ContentStatus = isManagementRole(organizerRole) ? 'approved' : 'pending';
 
-    return eventRepository.create({
+    const event = await eventRepository.create({
       ...eventData,
       organizer: organizerId as unknown as IEvent['organizer'],
       status,
     });
+
+    // Notify connections when event is auto-approved
+    if (status === 'approved') {
+      this._notifyConnectionsOfNewEvent(organizerId, data).catch(() => {});
+    }
+
+    return event;
+  }
+
+  private async _notifyConnectionsOfNewEvent(
+    userId: string,
+    data: Partial<IEvent>
+  ): Promise<void> {
+    const author = await userRepository.findById(userId);
+    if (!author) return;
+    const connectedIds = await connectionRepository.findConnectedUserIds(userId);
+    if (connectedIds.length === 0) return;
+
+    const title = data.title || 'an event';
+    const location = data.location ? ` at ${data.location}` : '';
+    const date = data.eventDate
+      ? ` on ${new Date(data.eventDate as unknown as string).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+      : '';
+    const authorImage = author.profileImage || '';
+
+    for (const connId of connectedIds) {
+      await notificationRepository.create({
+        userId: connId,
+        type: 'event',
+        title: author.name,
+        message: `Created an event: "${title}"${location}${date}`,
+        actorImage: authorImage,
+      });
+    }
   }
 
   async getById(id: string): Promise<IEvent> {

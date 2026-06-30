@@ -1,5 +1,6 @@
 import { postRepository } from '../repositories/post.repository';
 import { notificationRepository } from '../repositories/notification.repository';
+import { connectionRepository } from '../repositories/connection.repository';
 import { userRepository } from '../repositories/user.repository';
 import { AppError, buildPagination } from '../utils/response';
 import { uploadToCloudinary } from '../utils/cloudinary';
@@ -29,13 +30,41 @@ export class PostService {
     // Developer/HOD/Teacher posts are auto-approved; students/alumni go to review
     const status: ContentStatus = isManagementRole(authorRole) ? 'approved' : 'pending';
 
-    return postRepository.create({
+    const post = await postRepository.create({
       author: authorId as unknown as IPost['author'],
       content,
       tags,
       images,
       status,
     });
+
+    // Notify connections when post is auto-approved (management roles)
+    if (status === 'approved') {
+      this._notifyConnectionsOfNewPost(authorId, content).catch(() => {});
+    }
+
+    return post;
+  }
+
+  private async _notifyConnectionsOfNewPost(authorId: string, content: string): Promise<void> {
+    const author = await userRepository.findById(authorId);
+    if (!author) return;
+    const connectedIds = await connectionRepository.findConnectedUserIds(authorId);
+    if (connectedIds.length === 0) return;
+
+    const preview = content.length > 80 ? content.substring(0, 80) + '...' : content;
+    const authorImage = author.profileImage || '';
+
+    for (const userId of connectedIds) {
+      await notificationRepository.create({
+        userId,
+        type: 'like', // reusing type for feed — shows in notifications
+        title: author.name,
+        message: `Shared a new post: "${preview}"`,
+        referenceId: authorId,
+        actorImage: authorImage,
+      });
+    }
   }
 
   async getPostById(postId: string): Promise<IPost> {

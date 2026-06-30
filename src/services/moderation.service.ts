@@ -1,7 +1,10 @@
 import { Post, IPost, Event, IEvent, Opportunity, IOpportunity } from '../models';
 import { AppError, buildPagination } from '../utils/response';
 import { ContentStatus } from '../models/Post.model';
-import { sendPushToAll, sendPushToUser } from '../utils/firebase';
+import { sendPushToUser } from '../utils/firebase';
+import { connectionRepository } from '../repositories/connection.repository';
+import { notificationRepository } from '../repositories/notification.repository';
+import { userRepository } from '../repositories/user.repository';
 
 type ContentType = 'post' | 'event' | 'opportunity';
 
@@ -111,17 +114,8 @@ export class ModerationService {
           contentId: contentId,
         }).catch(() => {});
 
-        // Notify all users about new content
-        const title = type === 'post'
-          ? 'New Post'
-          : type === 'event'
-            ? 'New Event'
-            : 'New Opportunity';
-        sendPushToAll(title, `A new ${type} has been published. Check it out!`, {
-          type: 'new_content',
-          contentType: type,
-          contentId: contentId,
-        }, authorId).catch(() => {});
+        // Notify author's connections about the new content
+        this._notifyConnectionsOfApprovedContent(authorId, type, doc).catch(() => {});
       } else if (status === 'rejected') {
         sendPushToUser(authorId, 'Content Rejected', `Your ${type} was not approved.${rejectionReason ? ' Reason: ' + rejectionReason : ''}`, {
           type: 'content_rejected',
@@ -132,6 +126,46 @@ export class ModerationService {
     }
 
     return doc;
+  }
+
+  private async _notifyConnectionsOfApprovedContent(
+    authorId: string,
+    type: ContentType,
+    doc: IPost | IEvent | IOpportunity
+  ): Promise<void> {
+    const author = await userRepository.findById(authorId);
+    if (!author) return;
+    const connectedIds = await connectionRepository.findConnectedUserIds(authorId);
+    if (connectedIds.length === 0) return;
+
+    const authorImage = author.profileImage || '';
+    let message = '';
+
+    if (type === 'post') {
+      const post = doc as IPost;
+      const preview = post.content.length > 80 ? post.content.substring(0, 80) + '...' : post.content;
+      message = `Shared a new post: "${preview}"`;
+    } else if (type === 'opportunity') {
+      const opp = doc as IOpportunity;
+      const company = opp.company ? ` at ${opp.company}` : '';
+      const oppType = opp.type ? `[${opp.type}] ` : '';
+      message = `Posted ${oppType}${opp.title}${company}`;
+    } else if (type === 'event') {
+      const event = doc as IEvent;
+      const location = event.location ? ` at ${event.location}` : '';
+      message = `Created an event: "${event.title}"${location}`;
+    }
+
+    for (const connId of connectedIds) {
+      await notificationRepository.create({
+        userId: connId,
+        type: type === 'post' ? 'like' : type,
+        title: author.name,
+        message,
+        referenceId: doc._id?.toString(),
+        actorImage: authorImage,
+      });
+    }
   }
 
   /**

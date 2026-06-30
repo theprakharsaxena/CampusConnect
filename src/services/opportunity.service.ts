@@ -1,4 +1,7 @@
 import { opportunityRepository } from '../repositories/opportunity.repository';
+import { notificationRepository } from '../repositories/notification.repository';
+import { connectionRepository } from '../repositories/connection.repository';
+import { userRepository } from '../repositories/user.repository';
 import { AppError, buildPagination } from '../utils/response';
 import { IOpportunity } from '../models';
 import { IUser } from '../models/User.model';
@@ -14,11 +17,43 @@ export class OpportunityService {
   ): Promise<IOpportunity> {
     const status: ContentStatus = isManagementRole(posterRole) ? 'approved' : 'pending';
 
-    return opportunityRepository.create({
+    const opportunity = await opportunityRepository.create({
       ...data,
       postedBy: postedBy as unknown as IOpportunity['postedBy'],
       status,
     });
+
+    // Notify connections when opportunity is auto-approved
+    if (status === 'approved') {
+      this._notifyConnectionsOfNewOpportunity(postedBy, data).catch(() => {});
+    }
+
+    return opportunity;
+  }
+
+  private async _notifyConnectionsOfNewOpportunity(
+    userId: string,
+    data: Partial<IOpportunity>
+  ): Promise<void> {
+    const author = await userRepository.findById(userId);
+    if (!author) return;
+    const connectedIds = await connectionRepository.findConnectedUserIds(userId);
+    if (connectedIds.length === 0) return;
+
+    const title = data.title || 'an opportunity';
+    const company = data.company ? ` at ${data.company}` : '';
+    const type = data.type ? `[${data.type}] ` : '';
+    const authorImage = author.profileImage || '';
+
+    for (const connId of connectedIds) {
+      await notificationRepository.create({
+        userId: connId,
+        type: 'opportunity',
+        title: author.name,
+        message: `Posted ${type}${title}${company}`,
+        actorImage: authorImage,
+      });
+    }
   }
 
   async getById(id: string): Promise<IOpportunity> {

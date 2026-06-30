@@ -101,6 +101,22 @@ export class ConnectionRepository {
       { path: 'receiver', select: 'name email profileImage role department' },
     ]);
   }
+
+  /**
+   * Returns all user IDs that are connected (accepted) with the given user.
+   */
+  async findConnectedUserIds(userId: string): Promise<string[]> {
+    const connections = await Connection.find({
+      status: 'accepted' as ConnectionStatus,
+      $or: [{ sender: userId }, { receiver: userId }],
+    }).select('sender receiver');
+
+    return connections.map((c) => {
+      const senderId = c.sender.toString();
+      const receiverId = c.receiver.toString();
+      return senderId === userId ? receiverId : senderId;
+    });
+  }
 }
 
 export const connectionRepository = new ConnectionRepository();
