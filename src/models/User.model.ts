@@ -22,6 +22,9 @@ export interface IUser extends Document {
   isBlocked: boolean;
   refreshToken?: string;
   fcmTokens: string[];
+  streak: number;
+  longestStreak: number;
+  lastChallengeDate?: string;
   passwordResetToken?: string;
   passwordResetExpires?: Date;
   createdAt: Date;
@@ -59,6 +62,9 @@ const userSchema = new Schema<IUser>(
     isBlocked: { type: Boolean, default: false },
     refreshToken: { type: String, select: false },
     fcmTokens: [{ type: String }],
+    streak: { type: Number, default: 0 },
+    longestStreak: { type: Number, default: 0 },
+    lastChallengeDate: { type: String },  // YYYY-MM-DD
     passwordResetToken: { type: String, select: false },
     passwordResetExpires: { type: Date, select: false },
   },

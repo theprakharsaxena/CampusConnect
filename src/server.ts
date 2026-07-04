@@ -3,12 +3,16 @@ import app from './app';
 import { config } from './config';
 import { connectDatabase } from './config/database';
 import { initializeSocket } from './sockets';
+import { startDailyChallengeNotification } from './cron/dailyChallenge';
 
 const startServer = async (): Promise<void> => {
   await connectDatabase();
 
   const httpServer = http.createServer(app);
   initializeSocket(httpServer);
+
+  // Start cron jobs
+  startDailyChallengeNotification();
 
   httpServer.listen(config.port, () => {
     console.log(`CampusConnect API running on port ${config.port}`);

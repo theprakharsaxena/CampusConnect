@@ -10,6 +10,7 @@ import messageRoutes from './message.routes';
 import feedRoutes, { notificationRouter } from './feed.routes';
 import developerRoutes from './developer.routes';
 import moderationRoutes from './moderation.routes';
+import challengeRoutes from './challenge.routes';
 import { sendSuccess } from '../utils/response';
 
 const router = Router();
@@ -30,5 +31,6 @@ router.use('/feed', feedRoutes);
 router.use('/notifications', notificationRouter);
 router.use('/developer', developerRoutes);
 router.use('/moderation', moderationRoutes);
+router.use('/challenges', challengeRoutes);
 
 export default router;

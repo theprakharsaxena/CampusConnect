@@ -36,6 +36,7 @@ export const config = {
     pass: getEnv('SMTP_PASS', ''),
     from: getEnv('SMTP_FROM', 'no-reply@campusconnect.app'),
   },
+  novitaApiKey: process.env.NOVITA_API_KEY || '',
   cors: {
     origin: getEnv('CORS_ORIGIN', 'http://localhost:3000'),
   },
