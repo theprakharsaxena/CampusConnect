@@ -67,7 +67,7 @@ const submissionSchema = new Schema<IChallengeSubmission>(
 
 const challengeSchema = new Schema<IChallenge>(
   {
-    date: { type: String, required: true, unique: true, index: true },
+    date: { type: String, required: true, index: true },
     topic: {
       type: String,
       enum: [

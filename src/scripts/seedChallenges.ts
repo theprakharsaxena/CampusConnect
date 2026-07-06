@@ -450,22 +450,26 @@ async function seedChallenges() {
   await mongoose.connect(MONGODB_URI);
   console.log('Connected to MongoDB');
 
+  // Clear existing challenges and drop the unique index
+  console.log('Clearing old challenges...');
+  await Challenge.deleteMany({});
+  try {
+    await Challenge.collection.dropIndex('date_1');
+    console.log('Dropped unique date index');
+  } catch (_) {
+    // Index might not exist yet
+  }
+
   // Start dates from today
   const today = new Date();
 
   let created = 0;
-  let skipped = 0;
 
   for (let i = 0; i < challengeData.length; i++) {
     const d = new Date(today);
-    d.setDate(d.getDate() + i);
+    // Assign 3 challenges per day
+    d.setDate(d.getDate() + Math.floor(i / 3));
     const dateStr = d.toISOString().slice(0, 10);
-
-    const existing = await Challenge.findOne({ date: dateStr });
-    if (existing) {
-      skipped++;
-      continue;
-    }
 
     await Challenge.create({
       ...challengeData[i],
@@ -475,7 +479,7 @@ async function seedChallenges() {
     console.log(`Created challenge for ${dateStr}: ${challengeData[i].title}`);
   }
 
-  console.log(`\nDone. Created: ${created}, Skipped (already exists): ${skipped}`);
+  console.log(`\nDone. Created: ${created} challenges.`);
   await mongoose.disconnect();
   process.exit(0);
 }

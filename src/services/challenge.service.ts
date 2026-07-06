@@ -7,46 +7,55 @@ import { getDSAHint, getDSAExplanation } from '../utils/novita';
 const todayUTC = (): string => new Date().toISOString().slice(0, 10);
 
 export class ChallengeService {
-  /** Get today's challenge (without revealing correctOption) */
+  /** Get today's challenges (without revealing correctOption) */
   async getToday(userId: string): Promise<{
-    challenge: Partial<IChallenge>;
-    alreadySubmitted: boolean;
-    userAnswer?: string;
+    challenges: Array<{
+      challenge: Partial<IChallenge>;
+      alreadySubmitted: boolean;
+      userAnswer?: string;
+    }>;
     streak: number;
     longestStreak: number;
   }> {
     const date = todayUTC();
-    const challenge = await Challenge.findOne({ date });
-    if (!challenge) throw new AppError('No challenge available for today', 404);
-
-    const existing = challenge.submissions.find(
-      (s) => s.userId.toString() === userId
-    );
+    const challenges = await Challenge.find({ date });
+    if (!challenges || challenges.length === 0) {
+      throw new AppError('No challenges available for today', 404);
+    }
 
     const user = await User.findById(userId).select('streak longestStreak');
 
-    // Never expose correctOption unless already submitted
-    const safe: Partial<IChallenge> = {
-      _id: challenge._id,
-      date: challenge.date,
-      topic: challenge.topic,
-      difficulty: challenge.difficulty,
-      title: challenge.title,
-      question: challenge.question,
-      code: challenge.code,
-      options: challenge.options,
-      totalAttempts: challenge.totalAttempts,
-      totalCorrect: challenge.totalCorrect,
-      ...(existing && {
-        correctOption: challenge.correctOption,
-        explanation: challenge.explanation,
-      }),
-    };
+    const mapped = challenges.map((c) => {
+      const existing = c.submissions.find(
+        (s) => s.userId.toString() === userId
+      );
+
+      const safe: Partial<IChallenge> = {
+        _id: c._id,
+        date: c.date,
+        topic: c.topic,
+        difficulty: c.difficulty,
+        title: c.title,
+        question: c.question,
+        code: c.code,
+        options: c.options,
+        totalAttempts: c.totalAttempts,
+        totalCorrect: c.totalCorrect,
+        ...(existing && {
+          correctOption: c.correctOption,
+          explanation: c.explanation,
+        }),
+      };
+
+      return {
+        challenge: safe,
+        alreadySubmitted: !!existing,
+        userAnswer: existing?.selectedOption,
+      };
+    });
 
     return {
-      challenge: safe,
-      alreadySubmitted: !!existing,
-      userAnswer: existing?.selectedOption,
+      challenges: mapped,
       streak: user?.streak ?? 0,
       longestStreak: user?.longestStreak ?? 0,
     };
@@ -55,6 +64,7 @@ export class ChallengeService {
   /** Submit an answer — returns result + AI explanation */
   async submitAnswer(
     userId: string,
+    challengeId: string,
     selectedOption: string
   ): Promise<{
     isCorrect: boolean;
@@ -66,14 +76,14 @@ export class ChallengeService {
     streakUpdated: boolean;
   }> {
     const date = todayUTC();
-    const challenge = await Challenge.findOne({ date });
-    if (!challenge) throw new AppError('No challenge available for today', 404);
+    const challenge = await Challenge.findById(challengeId);
+    if (!challenge) throw new AppError('Challenge not found', 404);
 
     // Prevent double submission
     const existing = challenge.submissions.find(
       (s) => s.userId.toString() === userId
     );
-    if (existing) throw new AppError('You already submitted today\'s challenge', 400);
+    if (existing) throw new AppError('You already submitted this challenge', 400);
 
     const isCorrect = selectedOption.toUpperCase() === challenge.correctOption.toUpperCase();
 
@@ -148,10 +158,9 @@ export class ChallengeService {
   }
 
   /** Get a progressive hint (1, 2, or 3) */
-  async getHint(userId: string, hintLevel: 1 | 2 | 3): Promise<{ hint: string }> {
-    const date = todayUTC();
-    const challenge = await Challenge.findOne({ date });
-    if (!challenge) throw new AppError('No challenge for today', 404);
+  async getHint(userId: string, challengeId: string, hintLevel: 1 | 2 | 3): Promise<{ hint: string }> {
+    const challenge = await Challenge.findById(challengeId);
+    if (!challenge) throw new AppError('Challenge not found', 404);
 
     const alreadySubmitted = challenge.submissions.some(
       (s) => s.userId.toString() === userId
@@ -237,6 +246,11 @@ export class ChallengeService {
       attempted: topicProgress[t.id]?.attempted ?? 0,
       correct: topicProgress[t.id]?.correct ?? 0,
     }));
+  }
+
+  /** Get all challenges for study/practice */
+  async getAll(): Promise<IChallenge[]> {
+    return Challenge.find({}).sort({ date: 1 });
   }
 }
 

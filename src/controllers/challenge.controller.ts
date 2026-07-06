@@ -15,12 +15,12 @@ export class ChallengeController {
 
   submit = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { selectedOption } = req.body;
-      if (!selectedOption) {
-        res.status(400).json({ success: false, message: 'selectedOption is required' });
+      const { challengeId, selectedOption } = req.body;
+      if (!challengeId || !selectedOption) {
+        res.status(400).json({ success: false, message: 'challengeId and selectedOption are required' });
         return;
       }
-      const result = await challengeService.submitAnswer(req.user!.userId, selectedOption);
+      const result = await challengeService.submitAnswer(req.user!.userId, challengeId, selectedOption);
       sendSuccess(res, result, result.isCorrect ? '🎉 Correct!' : '❌ Wrong answer');
     } catch (error) {
       next(error);
@@ -29,12 +29,13 @@ export class ChallengeController {
 
   getHint = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
+      const { challengeId } = req.params;
       const level = parseInt(req.params.level as string);
-      if (![1, 2, 3].includes(level)) {
-        res.status(400).json({ success: false, message: 'Hint level must be 1, 2, or 3' });
+      if (!challengeId || ![1, 2, 3].includes(level)) {
+        res.status(400).json({ success: false, message: 'challengeId is required and hint level must be 1, 2, or 3' });
         return;
       }
-      const result = await challengeService.getHint(req.user!.userId, level as 1 | 2 | 3);
+      const result = await challengeService.getHint(req.user!.userId, challengeId as string, level as 1 | 2 | 3);
       sendSuccess(res, result);
     } catch (error) {
       next(error);
@@ -62,6 +63,15 @@ export class ChallengeController {
   getLearningPath = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       const result = await challengeService.getLearningPath(req.user!.userId);
+      sendSuccess(res, result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  getAll = async (_req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const result = await challengeService.getAll();
       sendSuccess(res, result);
     } catch (error) {
       next(error);
