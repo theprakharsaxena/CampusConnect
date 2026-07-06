@@ -23,7 +23,7 @@ export class CompilerService {
       headers,
       body: JSON.stringify({
         language: params.language,
-        version: params.version || '*',
+        version: '*',
         files: params.files,
         stdin: params.stdin || '',
       }),
