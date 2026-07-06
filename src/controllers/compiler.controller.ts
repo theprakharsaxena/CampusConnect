@@ -22,7 +22,25 @@ export class CompilerController {
       });
 
       sendSuccess(res, result, 'Code executed successfully');
-    } catch (error) {
+    } catch (error: any) {
+      const match = error.message?.match(/Compiler API error \((\d+)\): (.*)/);
+      if (match) {
+        const statusCode = parseInt(match[1], 10);
+        try {
+          // If the message is a JSON string, parse and return the message body
+          const parsed = JSON.parse(match[2]);
+          res.status(statusCode).json({
+            success: false,
+            message: parsed.message || match[2],
+          });
+        } catch {
+          res.status(statusCode).json({
+            success: false,
+            message: match[2],
+          });
+        }
+        return;
+      }
       next(error);
     }
   };
