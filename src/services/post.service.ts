@@ -40,13 +40,13 @@ export class PostService {
 
     // Notify connections when post is auto-approved (management roles)
     if (status === 'approved') {
-      this._notifyConnectionsOfNewPost(authorId, content).catch(() => {});
+      this._notifyConnectionsOfNewPost(authorId, post._id.toString(), content).catch(() => {});
     }
 
     return post;
   }
 
-  private async _notifyConnectionsOfNewPost(authorId: string, content: string): Promise<void> {
+  private async _notifyConnectionsOfNewPost(authorId: string, postId: string, content: string): Promise<void> {
     const author = await userRepository.findById(authorId);
     if (!author) return;
     const connectedIds = await connectionRepository.findConnectedUserIds(authorId);
@@ -61,7 +61,7 @@ export class PostService {
         type: 'like', // reusing type for feed — shows in notifications
         title: author.name,
         message: `Shared a new post: "${preview}"`,
-        referenceId: authorId,
+        referenceId: postId,
         actorImage: authorImage,
       });
     }
