@@ -15,24 +15,24 @@ const router = Router();
 
 router.use(authenticate);
 
-// User management (developer, HOD — scoped by role)
+// User management (developer, HOD, teacher — scoped by role permissions)
 router.get(
   '/manage/list',
-  authorize('developer', 'hod'),
+  authorize('developer', 'hod', 'teacher'),
   paginationValidator,
   validate,
   userManagementController.getManageableUsers
 );
 router.get(
   '/manage/pending',
-  authorize('developer', 'hod'),
+  authorize('developer', 'hod', 'teacher'),
   paginationValidator,
   validate,
   userManagementController.getPendingUsers
 );
 router.put(
   '/manage/:id',
-  authorize('developer', 'hod'),
+  authorize('developer', 'hod', 'teacher'),
   mongoIdValidator,
   manageUserValidator,
   validate,
@@ -40,21 +40,21 @@ router.put(
 );
 router.delete(
   '/manage/:id',
-  authorize('developer', 'hod'),
+  authorize('developer', 'hod', 'teacher'),
   mongoIdValidator,
   validate,
   userManagementController.deleteUser
 );
 router.put(
   '/manage/:id/activate',
-  authorize('developer', 'hod'),
+  authorize('developer', 'hod', 'teacher'),
   mongoIdValidator,
   validate,
   userManagementController.activateUser
 );
 router.put(
   '/manage/:id/deactivate',
-  authorize('developer', 'hod'),
+  authorize('developer', 'hod', 'teacher'),
   mongoIdValidator,
   validate,
   userManagementController.deactivateUser
