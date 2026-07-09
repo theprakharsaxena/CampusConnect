@@ -19,7 +19,7 @@ export class CommentController {
 
   delete = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      await commentService.deleteComment(getParam(req.params.id), req.user!.userId);
+      await commentService.deleteComment(getParam(req.params.id), req.user!.userId, req.user!.role);
       sendSuccess(res, undefined, 'Comment deleted');
     } catch (error) {
       next(error);

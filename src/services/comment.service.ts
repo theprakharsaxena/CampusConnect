@@ -4,6 +4,8 @@ import { notificationRepository } from '../repositories/notification.repository'
 import { AppError, buildPagination } from '../utils/response';
 import { IComment } from '../models';
 import { IUser } from '../models/User.model';
+import { UserRole } from '../types';
+import { checkPublicContent } from '../utils/moderation';
 
 export class CommentService {
   async addComment(
@@ -11,6 +13,8 @@ export class CommentService {
     userId: string,
     content: string
   ): Promise<IComment> {
+    await checkPublicContent(content);
+
     const post = await postRepository.findById(postId);
     if (!post) throw new AppError('Post not found', 404);
 
@@ -39,17 +43,47 @@ export class CommentService {
     return comment;
   }
 
-  async deleteComment(commentId: string, userId: string, isDeveloper = false): Promise<void> {
+  async deleteComment(commentId: string, userId: string, userRole: UserRole): Promise<void> {
     const comment = await commentRepository.findById(commentId);
     if (!comment) throw new AppError('Comment not found', 404);
 
-    const commentUserId = comment.userId._id?.toString() || comment.userId.toString();
-    if (commentUserId !== userId && !isDeveloper) {
-      throw new AppError('Not authorized to delete this comment', 403);
+    const commenter = comment.userId as unknown as IUser;
+    const commentUserId = commenter._id?.toString() || (comment.userId as any).toString();
+    const commenterRole = commenter.role || 'student';
+
+    const isOwner = commentUserId === userId;
+
+    if (isOwner) {
+      await commentRepository.delete(commentId);
+      await postRepository.decrementCommentsCount(comment.postId.toString());
+      return;
     }
 
-    await commentRepository.delete(commentId);
-    await postRepository.decrementCommentsCount(comment.postId.toString());
+    if (userRole === 'developer') {
+      await commentRepository.delete(commentId);
+      await postRepository.decrementCommentsCount(comment.postId.toString());
+      return;
+    }
+
+    if (userRole === 'hod') {
+      if (commenterRole === 'developer') {
+        throw new AppError('Not authorized to delete a developer\'s comment', 403);
+      }
+      await commentRepository.delete(commentId);
+      await postRepository.decrementCommentsCount(comment.postId.toString());
+      return;
+    }
+
+    if (userRole === 'teacher') {
+      if (commenterRole === 'developer' || commenterRole === 'hod') {
+        throw new AppError(`Not authorized to delete a ${commenterRole}'s comment`, 403);
+      }
+      await commentRepository.delete(commentId);
+      await postRepository.decrementCommentsCount(comment.postId.toString());
+      return;
+    }
+
+    throw new AppError('Not authorized to delete this comment', 403);
   }
 
   async getComments(postId: string, page: number, limit: number) {
