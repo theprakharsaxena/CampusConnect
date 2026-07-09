@@ -101,6 +101,10 @@ export class EventService {
       throw new AppError('Not authorized', 403);
     }
 
+    if (isOrganizer && !isManagementRole(userRole || 'student') && (event.rejectionCount || 0) >= 3) {
+      throw new AppError('You cannot edit this event as it has been rejected too many times', 400);
+    }
+
     const updateData: Record<string, unknown> = { ...data };
     if (bannerBuffer) {
       const { url } = await uploadToCloudinary(bannerBuffer, 'campusconnect/events');

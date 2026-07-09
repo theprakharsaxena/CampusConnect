@@ -89,6 +89,10 @@ export class OpportunityService {
       throw new AppError('Not authorized', 403);
     }
 
+    if (isOwner && !isManagementRole(userRole || 'student') && (opportunity.rejectionCount || 0) >= 3) {
+      throw new AppError('You cannot edit this opportunity as it has been rejected too many times', 400);
+    }
+
     // Students/alumni: any edit resets status to pending for re-review
     const updateData: Record<string, unknown> = { ...data };
     if (isOwner && !isManagementRole(userRole || 'student')) {

@@ -16,6 +16,7 @@ export interface IPost extends Document {
   reviewedBy?: PopulatedDoc<IUser & Document>;
   reviewedAt?: Date;
   rejectionReason?: string;
+  rejectionCount: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -37,6 +38,7 @@ const postSchema = new Schema<IPost>(
     reviewedBy: { type: Schema.Types.ObjectId, ref: 'User' },
     reviewedAt: { type: Date },
     rejectionReason: { type: String },
+    rejectionCount: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

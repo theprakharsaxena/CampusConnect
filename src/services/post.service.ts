@@ -100,6 +100,10 @@ export class PostService {
       throw new AppError('Not authorized to update this post', 403);
     }
 
+    if (isAuthor && !isManagementRole(userRole || 'student') && (post.rejectionCount || 0) >= 3) {
+      throw new AppError('You cannot edit this post as it has been rejected too many times', 400);
+    }
+
     let images = post.images;
     if (existingImages || imageBuffers.length > 0) {
       const newImages = await Promise.all(

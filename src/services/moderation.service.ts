@@ -65,13 +65,16 @@ export class ModerationService {
     reviewerId: string,
     rejectionReason?: string
   ) {
-    const updateData: Record<string, unknown> = {
+    const updateData: any = {
       status,
       reviewedBy: reviewerId,
       reviewedAt: new Date(),
     };
-    if (status === 'rejected' && rejectionReason) {
-      updateData.rejectionReason = rejectionReason;
+    if (status === 'rejected') {
+      updateData.$inc = { rejectionCount: 1 };
+      if (rejectionReason) {
+        updateData.rejectionReason = rejectionReason;
+      }
     }
 
     let doc: IPost | IEvent | IOpportunity | null = null;
