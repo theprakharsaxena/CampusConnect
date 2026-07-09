@@ -1,4 +1,5 @@
 import { config } from '../config';
+import { AppError } from './response';
 
 const NOVITA_API_URL = 'https://api.novita.ai/openai/v1/chat/completions';
 // deepseek-v3.2 — best for DSA/coding on Novita AI, cheap and fast
@@ -164,4 +165,42 @@ Return JSON in this exact format:
   if (!jsonMatch) throw new Error('No valid JSON in AI response');
 
   return JSON.parse(jsonMatch[0]);
+}
+
+/**
+ * Checks content appropriateness using AI (DeepSeek / Llama on Novita).
+ */
+export async function checkContentWithAI(text: string | undefined): Promise<void> {
+  if (!text || text.trim() === '') return;
+
+  const messages: NovitaMessage[] = [
+    {
+      role: 'system',
+      content: `You are a content moderation AI for CampusConnect, a college network application.
+Analyze if the user's content (posts, events, or opportunities) is appropriate to be published.
+Content MUST NOT contain highly offensive, profane, uncensored bad words, hate speech, or explicit sexual language.
+
+Respond in EXACTLY the following JSON format (no Markdown block, no backticks, just raw JSON):
+{
+  "approved": true or false,
+  "reason": "If not approved, explain in one clear, polite sentence why it is inappropriate (e.g. 'Your content contains inappropriate or profane language. Please keep it clean.'). Otherwise, leave empty."
+}`
+    },
+    {
+      role: 'user',
+      content: text
+    }
+  ];
+
+  try {
+    const responseText = await callNovita(messages, 150);
+    const cleaned = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+    const result = JSON.parse(cleaned) as { approved: boolean; reason: string };
+    if (!result.approved) {
+      throw new AppError(result.reason || 'You are not publishing that data', 400);
+    }
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    console.error('AI Moderation failed, falling back to local:', error);
+  }
 }

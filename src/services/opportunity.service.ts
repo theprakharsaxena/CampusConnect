@@ -8,6 +8,7 @@ import { IUser } from '../models/User.model';
 import { OpportunityFilterQuery, UserRole } from '../types';
 import { canManageRole, isManagementRole } from '../utils/permissions';
 import { ContentStatus } from '../models/Post.model';
+import { checkPublicContent } from '../utils/moderation';
 
 export class OpportunityService {
   async create(
@@ -15,6 +16,10 @@ export class OpportunityService {
     data: Partial<IOpportunity>,
     posterRole: UserRole = 'student'
   ): Promise<IOpportunity> {
+    await checkPublicContent(data.title);
+    await checkPublicContent(data.description);
+    await checkPublicContent(data.company);
+
     const status: ContentStatus = isManagementRole(posterRole) ? 'approved' : 'pending';
 
     const opportunity = await opportunityRepository.create({
@@ -68,6 +73,10 @@ export class OpportunityService {
     data: Partial<IOpportunity>,
     userRole?: UserRole
   ): Promise<IOpportunity> {
+    await checkPublicContent(data.title);
+    await checkPublicContent(data.description);
+    await checkPublicContent(data.company);
+
     const opportunity = await opportunityRepository.findById(id);
     if (!opportunity) throw new AppError('Opportunity not found', 404);
 

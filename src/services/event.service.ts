@@ -9,6 +9,7 @@ import { IUser } from '../models/User.model';
 import { EventRsvpStatus, UserRole } from '../types';
 import { canManageRole, isManagementRole } from '../utils/permissions';
 import { ContentStatus } from '../models/Post.model';
+import { checkPublicContent } from '../utils/moderation';
 
 export class EventService {
   async create(
@@ -17,6 +18,10 @@ export class EventService {
     bannerBuffer?: Buffer,
     organizerRole: UserRole = 'student'
   ): Promise<IEvent> {
+    await checkPublicContent(data.title);
+    await checkPublicContent(data.description);
+    await checkPublicContent(data.location);
+
     const eventData = { ...data };
 
     if (bannerBuffer) {
@@ -80,6 +85,10 @@ export class EventService {
     bannerBuffer?: Buffer,
     userRole?: UserRole
   ): Promise<IEvent> {
+    await checkPublicContent(data.title);
+    await checkPublicContent(data.description);
+    await checkPublicContent(data.location);
+
     const event = await eventRepository.findById(id);
     if (!event) throw new AppError('Event not found', 404);
 
