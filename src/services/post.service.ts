@@ -9,7 +9,7 @@ import { IUser } from '../models/User.model';
 import { canManageRole, isManagementRole } from '../utils/permissions';
 import { UserRole } from '../types';
 import { ContentStatus } from '../models/Post.model';
-import { checkPublicContent } from '../utils/moderation';
+import { checkPublicContent, checkPublicImage } from '../utils/moderation';
 
 export class PostService {
   async createPost(
@@ -20,6 +20,9 @@ export class PostService {
     authorRole: UserRole = 'student'
   ): Promise<IPost> {
     await checkPublicContent(content);
+    for (const buffer of imageBuffers) {
+      await checkPublicImage(buffer);
+    }
 
     // Images arrive pre-compressed from the client (≤5 MB each).
     // Upload all images concurrently — no sequential waiting.
@@ -87,6 +90,9 @@ export class PostService {
     existingImages?: string[]
   ): Promise<IPost> {
     await checkPublicContent(content);
+    for (const buffer of imageBuffers) {
+      await checkPublicImage(buffer);
+    }
 
     const post = await postRepository.findById(postId);
     if (!post) throw new AppError('Post not found', 404);

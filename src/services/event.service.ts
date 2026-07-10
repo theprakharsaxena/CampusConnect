@@ -9,7 +9,7 @@ import { IUser } from '../models/User.model';
 import { EventRsvpStatus, UserRole } from '../types';
 import { canManageRole, isManagementRole } from '../utils/permissions';
 import { ContentStatus } from '../models/Post.model';
-import { checkPublicContent } from '../utils/moderation';
+import { checkPublicContent, checkPublicImage } from '../utils/moderation';
 
 export class EventService {
   async create(
@@ -21,6 +21,7 @@ export class EventService {
     await checkPublicContent(data.title);
     await checkPublicContent(data.description);
     await checkPublicContent(data.location);
+    await checkPublicImage(bannerBuffer);
 
     const eventData = { ...data };
 
@@ -88,6 +89,7 @@ export class EventService {
     await checkPublicContent(data.title);
     await checkPublicContent(data.description);
     await checkPublicContent(data.location);
+    await checkPublicImage(bannerBuffer);
 
     const event = await eventRepository.findById(id);
     if (!event) throw new AppError('Event not found', 404);

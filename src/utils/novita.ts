@@ -204,3 +204,102 @@ Respond in EXACTLY the following JSON format (no Markdown block, no backticks, j
     console.error('AI Moderation failed, falling back to local:', error);
   }
 }
+
+/**
+ * Moderates an image using Llama 3.2 Vision on Novita AI.
+ * Throws AppError 400 if the image contains NSFW or inappropriate content.
+ */
+export async function moderateImageWithAI(imageBase64: string): Promise<void> {
+  const apiKey = config.novitaApiKey;
+  if (!apiKey) {
+    throw new Error('NOVITA_API_KEY is not configured');
+  }
+
+  let formattedBase64 = imageBase64;
+  if (!formattedBase64.startsWith('data:image/')) {
+    formattedBase64 = `data:image/jpeg;base64,${formattedBase64}`;
+  }
+
+  const messages = [
+    {
+      role: 'system',
+      content: `You are an image moderation AI for CampusConnect, a college network application.
+Analyze if the provided image is appropriate to be published on a college platform.
+The image MUST NOT contain:
+1. Underwear, lingerie, swimwear, nudity, semi-nudity, or highly suggestive/sexual content (NSFW).
+2. Graphic violence, blood, or gore.
+3. Obscene gestures or hate symbols.
+
+Be extremely strict. If there is a person in underwear, lingerie, swimwear, or displaying suggestive poses, you MUST reject the image ("approved": false).
+
+Respond in EXACTLY the following JSON format (no Markdown block, no backticks, just raw JSON):
+{
+  "approved": true or false,
+  "reason": "If not approved, explain in one clear, polite sentence why it is inappropriate (e.g. 'The uploaded image contains inappropriate or suggestive content. Please upload a clean image.'). Otherwise, leave empty."
+}`
+    },
+    {
+      role: 'user',
+      content: [
+        {
+          type: 'image_url',
+          image_url: {
+            url: formattedBase64
+          }
+        }
+      ]
+    }
+  ];
+
+  try {
+    const response = await fetch(NOVITA_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'qwen/qwen3-vl-30b-a3b-instruct',
+        messages,
+        max_tokens: 150,
+        temperature: 0.1,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      console.error(`Novita VLM API error: ${response.status} — ${error}`);
+      throw new AppError('The uploaded image contains inappropriate or suggestive content (flagged by safety filter).', 400);
+    }
+
+    const data = await response.json() as {
+      choices: { message: { content: string } }[];
+    };
+
+    const responseText = data.choices[0]?.message?.content?.trim() ?? '';
+    
+    // Use regex to robustly find the "approved" value from the response text
+    const approvedMatch = responseText.match(/"approved"\s*:\s*(true|false)/i);
+    let approved = true;
+    if (approvedMatch) {
+      approved = approvedMatch[1].toLowerCase() === 'true';
+    } else {
+      // Fallback: try parsing JSON
+      try {
+        const cleaned = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+        const parsed = JSON.parse(cleaned);
+        approved = parsed.approved;
+      } catch (e) {
+        approved = false;
+      }
+    }
+
+    if (!approved) {
+      throw new AppError('The uploaded image contains inappropriate or suggestive content. Please upload a clean image.', 400);
+    }
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    console.error('AI Image Moderation failed:', error);
+    throw new AppError('Image verification failed. Please try again with a different image.', 400);
+  }
+}
