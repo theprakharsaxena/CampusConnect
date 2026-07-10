@@ -21,6 +21,7 @@ interface RegisterInput {
   department?: string;
   batch?: string;
   rollNumber?: string;
+  semester?: number;
 }
 
 interface LoginResult {

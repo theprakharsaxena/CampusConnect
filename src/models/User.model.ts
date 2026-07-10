@@ -16,6 +16,7 @@ export interface IUser extends Document {
   company?: string;
   designation?: string;
   rollNumber?: string;
+  semester?: number;
   skills: string[];
   isVerified: boolean;
   isActive: boolean;
@@ -56,6 +57,7 @@ const userSchema = new Schema<IUser>(
     company: { type: String, trim: true },
     designation: { type: String, trim: true },
     rollNumber: { type: String, trim: true },
+    semester: { type: Number },
     skills: [{ type: String, trim: true }],
     isVerified: { type: Boolean, default: false },
     isActive: { type: Boolean, default: false },

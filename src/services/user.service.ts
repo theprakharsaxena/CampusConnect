@@ -53,7 +53,28 @@ export class UserService {
       data.rollNumber !== undefined &&
       data.rollNumber !== existingUser.rollNumber
     ) {
-      throw new AppError('Roll number cannot be changed after account activation', 400);
+      const isFirstSem = existingUser.role === 'student' && existingUser.semester === 1;
+      if (!isFirstSem) {
+        throw new AppError('Roll number cannot be changed after account activation', 400);
+      }
+    }
+
+    if (
+      existingUser.isActive &&
+      (existingUser.role === 'student' || existingUser.role === 'alumni') &&
+      data.batch !== undefined &&
+      data.batch !== existingUser.batch
+    ) {
+      throw new AppError('Batch cannot be changed after account activation', 400);
+    }
+
+    if (
+      existingUser.isActive &&
+      (existingUser.role === 'student' || existingUser.role === 'alumni') &&
+      data.department !== undefined &&
+      data.department !== existingUser.department
+    ) {
+      throw new AppError('Department cannot be changed after account activation', 400);
     }
 
     const updateData = { ...data };

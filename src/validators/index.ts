@@ -17,6 +17,12 @@ export const registerValidator = [
     .trim()
     .notEmpty()
     .withMessage('Roll Number / University ID is required'),
+  body('semester')
+    .if((_, { req }) => !req.body.role || req.body.role === 'student')
+    .notEmpty()
+    .withMessage('Semester is required')
+    .isInt({ min: 1, max: 6 })
+    .withMessage('Semester must be between 1 and 6'),
 ];
 
 export const loginValidator = [
