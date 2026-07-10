@@ -59,6 +59,12 @@ router.put(
   validate,
   userManagementController.deactivateUser
 );
+router.post(
+  '/manage/promote-semester',
+  authorize('developer', 'hod', 'teacher'),
+  validate,
+  userManagementController.promoteSemesters
+);
 
 router.get('/search', userSearchValidator, validate, userController.searchUsers);
 router.get('/:id', mongoIdValidator, validate, userController.getUser);

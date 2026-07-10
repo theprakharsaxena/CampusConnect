@@ -138,6 +138,15 @@ export class UserManagementController {
       next(error);
     }
   };
+
+  promoteSemesters = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      await userManagementService.promoteSemesters(req.user!.userId, req.body.userIds);
+      sendSuccess(res, undefined, 'Semesters promoted successfully');
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 export class DeveloperController {

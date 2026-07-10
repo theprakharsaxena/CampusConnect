@@ -70,8 +70,18 @@ export const updateProfileValidator = [
   body('bio').optional().isLength({ max: 500 }),
   body('department').optional().trim(),
   body('batch').optional().trim(),
-  body('linkedinUrl').optional({ values: 'falsy' }).isURL(),
-  body('githubUrl').optional({ values: 'falsy' }).isURL(),
+  body('linkedinUrl')
+    .optional({ values: 'falsy' })
+    .isURL()
+    .withMessage('Must be a valid URL')
+    .matches(/^(https?:\/\/)?(www\.)?linkedin\.com\/.*$/)
+    .withMessage('Must be a valid LinkedIn profile URL'),
+  body('githubUrl')
+    .optional({ values: 'falsy' })
+    .isURL()
+    .withMessage('Must be a valid URL')
+    .matches(/^(https?:\/\/)?(www\.)?github\.com\/.*$/)
+    .withMessage('Must be a valid GitHub profile URL'),
   body('company').optional().trim(),
   body('designation').optional().trim(),
   body('skills').optional().isArray(),
@@ -82,8 +92,18 @@ export const manageUserValidator = [
   body('bio').optional().isLength({ max: 500 }),
   body('department').optional().trim(),
   body('batch').optional().trim(),
-  body('linkedinUrl').optional({ values: 'falsy' }).isURL(),
-  body('githubUrl').optional({ values: 'falsy' }).isURL(),
+  body('linkedinUrl')
+    .optional({ values: 'falsy' })
+    .isURL()
+    .withMessage('Must be a valid URL')
+    .matches(/^(https?:\/\/)?(www\.)?linkedin\.com\/.*$/)
+    .withMessage('Must be a valid LinkedIn profile URL'),
+  body('githubUrl')
+    .optional({ values: 'falsy' })
+    .isURL()
+    .withMessage('Must be a valid URL')
+    .matches(/^(https?:\/\/)?(www\.)?github\.com\/.*$/)
+    .withMessage('Must be a valid GitHub profile URL'),
   body('company').optional().trim(),
   body('designation').optional().trim(),
   body('rollNumber').optional().trim(),
@@ -92,6 +112,10 @@ export const manageUserValidator = [
     .optional()
     .isIn(['student', 'teacher', 'hod', 'alumni', 'developer'])
     .withMessage('Invalid role'),
+  body('semester')
+    .optional()
+    .isInt({ min: 1, max: 6 })
+    .withMessage('Semester must be between 1 and 6'),
 ];
 
 export const paginationValidator = [

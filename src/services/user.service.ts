@@ -26,6 +26,7 @@ const MANAGER_EDITABLE_FIELDS = [
   'linkedinUrl',
   'githubUrl',
   'rollNumber',
+  'semester',
 ] as const;
 
 export class UserService {
@@ -177,6 +178,23 @@ export class UserManagementService {
 
     const deleted = await userRepository.delete(targetId);
     if (!deleted) throw new AppError('User not found', 404);
+  }
+
+  async promoteSemesters(actorId: string, userIds: string[]): Promise<void> {
+    const actor = await this.getActor(actorId);
+
+    for (const targetId of userIds) {
+      const target = await this.getTarget(targetId);
+      assertCanManageUser(actor, target);
+
+      if (target.role === 'student' && target.semester) {
+        if (target.semester < 6) {
+          await userRepository.update(targetId, { semester: target.semester + 1 });
+        } else if (target.semester === 6) {
+          await userRepository.update(targetId, { role: 'alumni', $unset: { semester: "" } });
+        }
+      }
+    }
   }
 
   async activateUser(actorId: string, targetId: string): Promise<Partial<IUser>> {
