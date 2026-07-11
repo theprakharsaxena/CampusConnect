@@ -8,6 +8,7 @@ export interface IPost extends Document {
   author: PopulatedDoc<IUser & Document>;
   content: string;
   images: string[];
+  pdfUrl?: string;
   tags: string[];
   likesCount: number;
   commentsCount: number;
@@ -26,6 +27,7 @@ const postSchema = new Schema<IPost>(
     author: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     content: { type: String, required: true, maxlength: 5000 },
     images: [{ type: String }],
+    pdfUrl: { type: String },
     tags: [{ type: String, trim: true, lowercase: true }],
     likesCount: { type: Number, default: 0 },
     commentsCount: { type: Number, default: 0 },

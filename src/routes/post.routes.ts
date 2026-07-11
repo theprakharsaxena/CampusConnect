@@ -43,10 +43,14 @@ router.post(
   '/',
   requireActive,
   withTimeout(POST_CREATE_TIMEOUT_MS),
-  upload.array('images', MAX_IMAGES),
+  upload.fields([
+    { name: 'images', maxCount: MAX_IMAGES },
+    { name: 'pdf', maxCount: 1 },
+  ]),
   (req: Request, res: Response, next: NextFunction): void => {
-    const files = req.files as Express.Multer.File[] | undefined;
-    if (files && files.length > MAX_IMAGES) {
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+    const images = files?.images;
+    if (images && images.length > MAX_IMAGES) {
       sendError(res, `Too many images. Maximum is ${MAX_IMAGES}.`, 400);
       return;
     }
@@ -63,10 +67,14 @@ router.get('/:id', mongoIdValidator, validate, postController.getById);
 router.put(
   '/:id',
   requireActive,
-  upload.array('images', MAX_IMAGES),
+  upload.fields([
+    { name: 'images', maxCount: MAX_IMAGES },
+    { name: 'pdf', maxCount: 1 },
+  ]),
   (req: Request, res: Response, next: NextFunction): void => {
-    const files = req.files as Express.Multer.File[] | undefined;
-    if (files && files.length > MAX_IMAGES) {
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+    const images = files?.images;
+    if (images && images.length > MAX_IMAGES) {
       sendError(res, `Too many images. Maximum is ${MAX_IMAGES}.`, 400);
       return;
     }

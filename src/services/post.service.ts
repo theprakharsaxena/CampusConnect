@@ -17,7 +17,8 @@ export class PostService {
     content: string,
     tags: string[] = [],
     imageBuffers: Buffer[] = [],
-    authorRole: UserRole = 'student'
+    authorRole: UserRole = 'student',
+    pdfBuffer?: Buffer
   ): Promise<IPost> {
     await checkPublicContent(content);
     for (const buffer of imageBuffers) {
@@ -33,6 +34,12 @@ export class PostService {
       })
     );
 
+    let pdfUrl: string | undefined;
+    if (pdfBuffer) {
+      const { url } = await uploadToCloudinary(pdfBuffer, 'campusconnect/posts');
+      pdfUrl = url;
+    }
+
     // Developer/HOD/Teacher posts are auto-approved; students/alumni go to review
     const status: ContentStatus = isManagementRole(authorRole) ? 'approved' : 'pending';
 
@@ -41,6 +48,7 @@ export class PostService {
       content,
       tags,
       images,
+      pdfUrl,
       status,
     });
 
@@ -87,7 +95,8 @@ export class PostService {
     tags?: string[],
     userRole?: UserRole,
     imageBuffers: Buffer[] = [],
-    existingImages?: string[]
+    existingImages?: string[],
+    pdfBuffer?: Buffer
   ): Promise<IPost> {
     await checkPublicContent(content);
     for (const buffer of imageBuffers) {
@@ -121,6 +130,12 @@ export class PostService {
       images = [...(existingImages || []), ...newImages];
     }
 
+    let pdfUrl = post.pdfUrl;
+    if (pdfBuffer) {
+      const { url } = await uploadToCloudinary(pdfBuffer, 'campusconnect/posts');
+      pdfUrl = url;
+    }
+
     // Students/alumni: any edit resets status to pending for re-review
     const statusUpdate: Record<string, unknown> = {};
     if (isAuthor && !isManagementRole(userRole || 'student')) {
@@ -134,6 +149,7 @@ export class PostService {
       content,
       ...(tags && { tags }),
       images,
+      pdfUrl,
       ...statusUpdate,
     });
     if (!updated) throw new AppError('Post not found', 404);

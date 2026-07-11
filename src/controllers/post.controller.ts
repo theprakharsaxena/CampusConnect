@@ -11,16 +11,17 @@ export class PostController {
           ? JSON.parse(req.body.tags)
           : req.body.tags
         : [];
-      const imageBuffers = (req.files as Express.Multer.File[] | undefined)?.map(
-        (f) => f.buffer
-      ) || [];
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      const imageBuffers = files?.images?.map((f) => f.buffer) || [];
+      const pdfBuffer = files?.pdf?.[0]?.buffer;
 
       const post = await postService.createPost(
         req.user!.userId,
         req.body.content,
         tags,
         imageBuffers,
-        req.user!.role
+        req.user!.role,
+        pdfBuffer
       );
       sendSuccess(res, post, 'Post created', 201);
     } catch (error) {
@@ -39,9 +40,10 @@ export class PostController {
 
   update = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const imageBuffers = (req.files as Express.Multer.File[] | undefined)?.map(
-        (f) => f.buffer
-      ) || [];
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      const imageBuffers = files?.images?.map((f) => f.buffer) || [];
+      const pdfBuffer = files?.pdf?.[0]?.buffer;
+
       const existingImages = req.body.existingImages
         ? typeof req.body.existingImages === 'string'
           ? req.body.existingImages.split(',').filter(Boolean)
@@ -55,7 +57,8 @@ export class PostController {
         req.body.tags,
         req.user!.role,
         imageBuffers,
-        existingImages
+        existingImages,
+        pdfBuffer
       );
       sendSuccess(res, post, 'Post updated');
     } catch (error) {
