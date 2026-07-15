@@ -93,8 +93,8 @@ After running `npm run seed`:
 
 | Role | Email | Password |
 |------|-------|----------|
-| Developer | developer@campusconnect.edu | Developer@12345 |
-| HOD | sarah.johnson@campusconnect.edu | Teacher@123 |
+| Developer | prakharsaxena5125@gmail.com | Developer@12345 |
+| HOD | romasaxena1234@gmail.com | Teacher@123 |
 | Teacher | michael.chen@campusconnect.edu | Teacher@123 |
 | Student | alice.williams@student.campusconnect.edu | Student@123 |
 | Alumni | carol.davis@alumni.campusconnect.edu | Alumni@123 |

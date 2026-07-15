@@ -11,7 +11,7 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/campus
 const demoUsers = [
   {
     name: 'Developer User',
-    email: 'developer@campusconnect.edu',
+    email: 'prakharsaxena5125@gmail.com',
     password: 'Developer@12345',
     role: 'developer' as const,
     department: 'Developeristration',
@@ -20,7 +20,7 @@ const demoUsers = [
   },
   {
     name: 'Dr. Sarah Johnson',
-    email: 'sarah.johnson@campusconnect.edu',
+    email: 'romasaxena1234@gmail.com',
     password: 'Teacher@123',
     role: 'hod' as const,
     department: 'Computer Science',

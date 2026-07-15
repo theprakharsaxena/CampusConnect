@@ -13,11 +13,20 @@ import moderationRoutes from './moderation.routes';
 import challengeRoutes from './challenge.routes';
 import compilerRoutes from './compiler.routes';
 import { sendSuccess } from '../utils/response';
+import { config } from '../config';
 
 const router = Router();
 
 router.get('/health', (_req: Request, res: Response) => {
   sendSuccess(res, { status: 'ok', timestamp: new Date().toISOString() });
+});
+
+router.get('/app-status', (_req: Request, res: Response) => {
+  sendSuccess(res, {
+    isPublished: config.isAppPublished,
+    appStoreUrl: config.appStoreUrl,
+    playStoreUrl: config.playStoreUrl,
+  });
 });
 
 router.use('/auth', authRoutes);

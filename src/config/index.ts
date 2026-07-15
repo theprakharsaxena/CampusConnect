@@ -56,4 +56,7 @@ export const config = {
   apiBaseUrl:
     process.env.API_BASE_URL ||
     `http://localhost:${parseInt(process.env.PORT || '5000', 10)}/api/${process.env.API_VERSION || 'v1'}`,
+  isAppPublished: process.env.IS_APP_PUBLISHED === 'true',
+  appStoreUrl: process.env.APP_STORE_URL || '',
+  playStoreUrl: process.env.PLAY_STORE_URL || '',
 } as const;
