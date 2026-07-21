@@ -14,6 +14,7 @@ export class PostController {
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
       const imageBuffers = files?.images?.map((f) => f.buffer) || [];
       const pdfBuffer = files?.pdf?.[0]?.buffer;
+      const pdfName = files?.pdf?.[0]?.originalname;
 
       const post = await postService.createPost(
         req.user!.userId,
@@ -21,7 +22,8 @@ export class PostController {
         tags,
         imageBuffers,
         req.user!.role,
-        pdfBuffer
+        pdfBuffer,
+        pdfName
       );
       sendSuccess(res, post, 'Post created', 201);
     } catch (error) {
@@ -43,6 +45,7 @@ export class PostController {
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
       const imageBuffers = files?.images?.map((f) => f.buffer) || [];
       const pdfBuffer = files?.pdf?.[0]?.buffer;
+      const pdfName = files?.pdf?.[0]?.originalname;
 
       const existingImages = req.body.existingImages
         ? typeof req.body.existingImages === 'string'
@@ -58,7 +61,8 @@ export class PostController {
         req.user!.role,
         imageBuffers,
         existingImages,
-        pdfBuffer
+        pdfBuffer,
+        pdfName
       );
       sendSuccess(res, post, 'Post updated');
     } catch (error) {

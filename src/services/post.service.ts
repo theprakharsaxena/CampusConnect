@@ -21,7 +21,8 @@ export class PostService {
     tags: string[] = [],
     imageBuffers: Buffer[] = [],
     authorRole: UserRole = 'student',
-    pdfBuffer?: Buffer
+    pdfBuffer?: Buffer,
+    pdfName?: string
   ): Promise<IPost> {
     await checkPublicContent(content);
     for (const buffer of imageBuffers) {
@@ -39,17 +40,19 @@ export class PostService {
 
     let pdfUrl: string | undefined;
     if (pdfBuffer) {
-      const filename = `${Date.now()}_${Math.round(Math.random() * 1e9)}.pdf`;
+      const folderName = `${Date.now()}_${Math.round(Math.random() * 1e9)}`;
+      const safeFilename = pdfName ? path.basename(pdfName).replace(/[^a-zA-Z0-9.-]/g, '_') : 'document.pdf';
+      
       if (isR2Configured()) {
-        pdfUrl = await uploadToR2(pdfBuffer, `posts/${filename}`, 'application/pdf');
+        pdfUrl = await uploadToR2(pdfBuffer, `posts/${folderName}/${safeFilename}`, 'application/pdf');
       } else {
-        const uploadsDir = path.join(process.cwd(), 'uploads/posts');
+        const uploadsDir = path.join(process.cwd(), 'uploads/posts', folderName);
         if (!fs.existsSync(uploadsDir)) {
           fs.mkdirSync(uploadsDir, { recursive: true });
         }
-        const filePath = path.join(uploadsDir, filename);
+        const filePath = path.join(uploadsDir, safeFilename);
         fs.writeFileSync(filePath, pdfBuffer);
-        pdfUrl = `/uploads/posts/${filename}`;
+        pdfUrl = `/uploads/posts/${folderName}/${safeFilename}`;
       }
     }
 
@@ -109,7 +112,8 @@ export class PostService {
     userRole?: UserRole,
     imageBuffers: Buffer[] = [],
     existingImages?: string[],
-    pdfBuffer?: Buffer
+    pdfBuffer?: Buffer,
+    pdfName?: string
   ): Promise<IPost> {
     await checkPublicContent(content);
     for (const buffer of imageBuffers) {
@@ -145,17 +149,19 @@ export class PostService {
 
     let pdfUrl = post.pdfUrl;
     if (pdfBuffer) {
-      const filename = `${Date.now()}_${Math.round(Math.random() * 1e9)}.pdf`;
+      const folderName = `${Date.now()}_${Math.round(Math.random() * 1e9)}`;
+      const safeFilename = pdfName ? path.basename(pdfName).replace(/[^a-zA-Z0-9.-]/g, '_') : 'document.pdf';
+      
       if (isR2Configured()) {
-        pdfUrl = await uploadToR2(pdfBuffer, `posts/${filename}`, 'application/pdf');
+        pdfUrl = await uploadToR2(pdfBuffer, `posts/${folderName}/${safeFilename}`, 'application/pdf');
       } else {
-        const uploadsDir = path.join(process.cwd(), 'uploads/posts');
+        const uploadsDir = path.join(process.cwd(), 'uploads/posts', folderName);
         if (!fs.existsSync(uploadsDir)) {
           fs.mkdirSync(uploadsDir, { recursive: true });
         }
-        const filePath = path.join(uploadsDir, filename);
+        const filePath = path.join(uploadsDir, safeFilename);
         fs.writeFileSync(filePath, pdfBuffer);
-        pdfUrl = `/uploads/posts/${filename}`;
+        pdfUrl = `/uploads/posts/${folderName}/${safeFilename}`;
       }
     }
 

@@ -1,7 +1,18 @@
 import { body, param, query } from 'express-validator';
+import { checkContentWithAI } from '../utils/novita';
 
 export const registerValidator = [
-  body('name').trim().notEmpty().withMessage('Name is required'),
+  body('name')
+    .trim()
+    .notEmpty()
+    .withMessage('Name is required')
+    .custom(async (value) => {
+      try {
+        await checkContentWithAI(value);
+      } catch (err: any) {
+        throw new Error(err?.message || 'Name contains inappropriate words');
+      }
+    }),
   body('email').isEmail().withMessage('Valid email is required'),
   body('password')
     .isLength({ min: 8 })
