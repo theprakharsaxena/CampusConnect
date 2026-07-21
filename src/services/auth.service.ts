@@ -123,16 +123,20 @@ export class AuthService {
   async login(email: string, password: string): Promise<LoginResult> {
     const user = await userRepository.findByEmail(email, true);
     if (!user) {
-      throw new AppError('Invalid email or password', 401);
+      throw new AppError('This email is not registered', 404);
     }
 
     if (user.isBlocked) {
-      throw new AppError('Your account has been blocked', 403);
+      throw new AppError('Your account has been blocked. Please contact administration.', 403);
+    }
+
+    if (!user.isActive) {
+      throw new AppError('Your account is pending approval by administration', 403);
     }
 
     const isValid = await comparePassword(password, user.password);
     if (!isValid) {
-      throw new AppError('Invalid email or password', 401);
+      throw new AppError('Incorrect password. Please check and try again.', 401);
     }
 
     const tokens = this.generateTokens(user);
