@@ -1,9 +1,12 @@
+import fs from 'fs';
+import path from 'path';
 import { postRepository } from '../repositories/post.repository';
 import { notificationRepository } from '../repositories/notification.repository';
 import { connectionRepository } from '../repositories/connection.repository';
 import { userRepository } from '../repositories/user.repository';
 import { AppError, buildPagination } from '../utils/response';
 import { uploadToCloudinary } from '../utils/cloudinary';
+import { isR2Configured, uploadToR2 } from '../utils/r2';
 import { IPost } from '../models';
 import { IUser } from '../models/User.model';
 import { canManageRole, isManagementRole } from '../utils/permissions';
@@ -36,8 +39,18 @@ export class PostService {
 
     let pdfUrl: string | undefined;
     if (pdfBuffer) {
-      const { url } = await uploadToCloudinary(pdfBuffer, 'campusconnect/posts');
-      pdfUrl = url;
+      const filename = `${Date.now()}_${Math.round(Math.random() * 1e9)}.pdf`;
+      if (isR2Configured()) {
+        pdfUrl = await uploadToR2(pdfBuffer, `posts/${filename}`, 'application/pdf');
+      } else {
+        const uploadsDir = path.join(process.cwd(), 'uploads/posts');
+        if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+        const filePath = path.join(uploadsDir, filename);
+        fs.writeFileSync(filePath, pdfBuffer);
+        pdfUrl = `/uploads/posts/${filename}`;
+      }
     }
 
     // Developer/HOD/Teacher posts are auto-approved; students/alumni go to review
@@ -132,8 +145,18 @@ export class PostService {
 
     let pdfUrl = post.pdfUrl;
     if (pdfBuffer) {
-      const { url } = await uploadToCloudinary(pdfBuffer, 'campusconnect/posts');
-      pdfUrl = url;
+      const filename = `${Date.now()}_${Math.round(Math.random() * 1e9)}.pdf`;
+      if (isR2Configured()) {
+        pdfUrl = await uploadToR2(pdfBuffer, `posts/${filename}`, 'application/pdf');
+      } else {
+        const uploadsDir = path.join(process.cwd(), 'uploads/posts');
+        if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+        const filePath = path.join(uploadsDir, filename);
+        fs.writeFileSync(filePath, pdfBuffer);
+        pdfUrl = `/uploads/posts/${filename}`;
+      }
     }
 
     // Students/alumni: any edit resets status to pending for re-review

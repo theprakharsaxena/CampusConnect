@@ -15,7 +15,9 @@ const BASE_BACKOFF_MS = 500; // 500 ms → 1 s → 2 s
  */
 const attemptUpload = (
   buffer: Buffer,
-  folder: string
+  folder: string,
+  resourceType: 'auto' | 'image' | 'video' | 'raw' = 'auto',
+  format?: string
 ): Promise<{ url: string; publicId: string }> => {
   return new Promise((resolve, reject) => {
     let settled = false;
@@ -29,7 +31,7 @@ const attemptUpload = (
     }, UPLOAD_TIMEOUT_MS);
 
     const uploadStream = cloudinary.uploader.upload_stream(
-      { folder, resource_type: 'auto' },
+      { folder, resource_type: resourceType, ...(format && { format }) },
       (error, result) => {
         if (settled) return;
         settled = true;
@@ -51,13 +53,15 @@ const attemptUpload = (
 
 export const uploadToCloudinary = async (
   buffer: Buffer,
-  folder: string = 'campusconnect'
+  folder: string = 'campusconnect',
+  resourceType: 'auto' | 'image' | 'video' | 'raw' = 'auto',
+  format?: string
 ): Promise<{ url: string; publicId: string }> => {
   let lastError: unknown;
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     try {
-      return await attemptUpload(buffer, folder);
+      return await attemptUpload(buffer, folder, resourceType, format);
     } catch (err) {
       lastError = err;
       if (attempt < MAX_ATTEMPTS) {
