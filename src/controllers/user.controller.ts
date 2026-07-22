@@ -147,6 +147,15 @@ export class UserManagementController {
       next(error);
     }
   };
+
+  demoteSemesters = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      await userManagementService.demoteSemesters(req.user!.userId, req.body.userIds);
+      sendSuccess(res, undefined, 'Semesters demoted successfully');
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 export class DeveloperController {

@@ -197,6 +197,23 @@ export class UserManagementService {
     }
   }
 
+  async demoteSemesters(actorId: string, userIds: string[]): Promise<void> {
+    const actor = await this.getActor(actorId);
+
+    for (const targetId of userIds) {
+      const target = await this.getTarget(targetId);
+      assertCanManageUser(actor, target);
+
+      if (target.role === 'student' && target.semester) {
+        if (target.semester > 1) {
+          await userRepository.update(targetId, { semester: target.semester - 1 });
+        }
+      } else if (target.role === 'alumni') {
+        await userRepository.update(targetId, { role: 'student', semester: 6 });
+      }
+    }
+  }
+
   async activateUser(actorId: string, targetId: string): Promise<Partial<IUser>> {
     const actor = await this.getActor(actorId);
     const target = await this.getTarget(targetId);
