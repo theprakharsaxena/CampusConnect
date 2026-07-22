@@ -95,9 +95,19 @@ After running `npm run seed`:
 |------|-------|----------|
 | Developer | prakharsaxena5125@gmail.com | Developer@12345 |
 | HOD | romasaxena1234@gmail.com | Teacher@123 |
-| Teacher | michael.chen@campusconnect.edu | Teacher@123 |
-| Student | alice.williams@student.campusconnect.edu | Student@123 |
-| Alumni | carol.davis@alumni.campusconnect.edu | Alumni@123 |
+
+### Test College Demo Credentials
+
+These accounts belong to the isolated **Test College** tenant:
+
+| Role | Email | Password |
+|------|-------|----------|
+| Developer | developer.test@testcollege.edu | Developer@12345 |
+| HOD | sarah.test@hod.testcollege.edu | Teacher@123 |
+| Teacher | michael.test@teacher.testcollege.edu | Teacher@123 |
+| Student (1) | alice.test@student.testcollege.edu | Student@123 |
+| Student (2) | bob.test@student.testcollege.edu | Student@123 |
+| Alumni | carol.test@alumni.testcollege.edu | Alumni@123 |
 
 ## Socket.IO Events
 

@@ -17,13 +17,15 @@ export class ChallengeService {
     streak: number;
     longestStreak: number;
   }> {
+    const user = await User.findById(userId).select('streak longestStreak college');
+    if (!user) throw new AppError('User not found', 404);
+    const college = user.college || 'Bareilly College';
+
     const date = todayUTC();
-    const challenges = await Challenge.find({ date });
+    const challenges = await Challenge.find({ date, college });
     if (!challenges || challenges.length === 0) {
       throw new AppError('No challenges available for today', 404);
     }
-
-    const user = await User.findById(userId).select('streak longestStreak');
 
     const mapped = challenges.map((c) => {
       const existing = c.submissions.find(
@@ -249,8 +251,10 @@ export class ChallengeService {
   }
 
   /** Get all challenges for study/practice */
-  async getAll(): Promise<IChallenge[]> {
-    return Challenge.find({}).sort({ date: 1 });
+  async getAll(college?: string): Promise<IChallenge[]> {
+    const filter: any = {};
+    if (college) filter.college = college;
+    return Challenge.find(filter).sort({ date: 1 });
   }
 }
 

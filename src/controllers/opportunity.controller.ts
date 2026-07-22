@@ -59,6 +59,7 @@ export class OpportunityController {
         postedBy: req.query.postedBy as string,
         page,
         limit,
+        college: req.user!.college || 'Bareilly College',
       }, req.user!.role);
       sendSuccess(res, result.opportunities, undefined, 200, result.pagination);
     } catch (error) {

@@ -69,9 +69,9 @@ export class ChallengeController {
     }
   };
 
-  getAll = async (_req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  getAll = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const result = await challengeService.getAll();
+      const result = await challengeService.getAll(req.user!.college || 'Bareilly College');
       sendSuccess(res, result);
     } catch (error) {
       next(error);

@@ -32,6 +32,7 @@ export interface JwtPayload {
   userId: string;
   email: string;
   role: UserRole;
+  college: string;
 }
 
 export interface AuthRequest extends Request {
@@ -66,6 +67,7 @@ export interface UserFilterQuery {
   skills?: string | string[];
   page?: number;
   limit?: number;
+  college?: string;
 }
 
 export interface OpportunityFilterQuery {
@@ -76,6 +78,7 @@ export interface OpportunityFilterQuery {
   postedBy?: string;
   page?: number;
   limit?: number;
+  college?: string;
 }
 
 export interface FeedQuery {

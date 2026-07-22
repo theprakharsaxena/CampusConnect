@@ -7,6 +7,7 @@ export interface IUser extends Document {
   email: string;
   password: string;
   role: UserRole;
+  college: string;
   department?: string;
   batch?: string;
   bio?: string;
@@ -38,7 +39,6 @@ const userSchema = new Schema<IUser>(
     email: {
       type: String,
       required: true,
-      unique: true,
       lowercase: true,
       trim: true,
     },
@@ -47,6 +47,12 @@ const userSchema = new Schema<IUser>(
       type: String,
       enum: ['student', 'teacher', 'hod', 'alumni', 'developer'],
       default: 'student',
+    },
+    college: {
+      type: String,
+      enum: ['Bareilly College', 'Test College'],
+      default: 'Bareilly College',
+      required: true,
     },
     department: { type: String, trim: true },
     batch: { type: String, trim: true },
@@ -73,6 +79,8 @@ const userSchema = new Schema<IUser>(
   { timestamps: true }
 );
 
+userSchema.index({ email: 1, college: 1 }, { unique: true });
+userSchema.index({ college: 1 });
 userSchema.index({ role: 1 });
 userSchema.index({ isActive: 1 });
 userSchema.index({ department: 1 });
@@ -81,3 +89,8 @@ userSchema.index({ skills: 1 });
 userSchema.index({ name: 'text', email: 'text', bio: 'text' });
 
 export const User = model<IUser>('User', userSchema);
+
+User.on('index', (err) => {
+  if (err) console.error('Mongoose Index Error:', err);
+  User.collection.dropIndex('email_1').catch(() => {});
+});

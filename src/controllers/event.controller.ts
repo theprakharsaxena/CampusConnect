@@ -58,7 +58,7 @@ export class EventController {
         req.query.limit as string
       );
       const organizerId = req.query.organizerId as string | undefined;
-      const result = await eventService.getAll(page, limit, organizerId, req.user!.role);
+      const result = await eventService.getAll(page, limit, organizerId, req.user!.role, req.user!.college || 'Bareilly College');
       sendSuccess(res, result.events, undefined, 200, result.pagination);
     } catch (error) {
       next(error);

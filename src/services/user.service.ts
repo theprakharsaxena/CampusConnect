@@ -135,6 +135,7 @@ export class UserManagementService {
       isActive,
       page,
       limit,
+      college: actor.college,
     });
     return {
       users: users.map(sanitizeUser),
@@ -244,8 +245,8 @@ export class UserManagementService {
 }
 
 export class DeveloperService {
-  async getAllUsers(page: number, limit: number) {
-    const { users, total } = await userRepository.findAll(page, limit);
+  async getAllUsers(page: number, limit: number, college?: string) {
+    const { users, total } = await userRepository.findAll(page, limit, college);
     return {
       users: users.map(sanitizeUser),
       pagination: buildPagination(page, limit, total),
@@ -292,7 +293,8 @@ export class DeveloperService {
     await userRepository.delete(userId);
   }
 
-  async getAnalytics() {
+  async getAnalytics(college?: string) {
+    const collegeFilter = college ? { college } : {};
     const [
       totalUsers,
       totalStudents,
@@ -306,17 +308,17 @@ export class DeveloperService {
       pendingStudents,
       pendingTeachers,
     ] = await Promise.all([
-      userRepository.countDocuments(),
-      userRepository.countDocuments({ role: 'student' }),
-      userRepository.countDocuments({ role: 'teacher' }),
-      userRepository.countDocuments({ role: 'alumni' }),
-      (await import('../repositories/post.repository')).postRepository.countDocuments(),
-      (await import('../repositories/opportunity.repository')).opportunityRepository.countDocuments(),
-      (await import('../repositories/event.repository')).eventRepository.countDocuments(),
-      userRepository.countDocuments({ isBlocked: true }),
-      userRepository.countDocuments({ isActive: false }),
-      userRepository.countDocuments({ role: 'student', isActive: false }),
-      userRepository.countDocuments({ role: 'teacher', isActive: false }),
+      userRepository.countDocuments(collegeFilter),
+      userRepository.countDocuments({ role: 'student', ...collegeFilter }),
+      userRepository.countDocuments({ role: 'teacher', ...collegeFilter }),
+      userRepository.countDocuments({ role: 'alumni', ...collegeFilter }),
+      (await import('../repositories/post.repository')).postRepository.countDocuments(collegeFilter),
+      (await import('../repositories/opportunity.repository')).opportunityRepository.countDocuments(collegeFilter),
+      (await import('../repositories/event.repository')).eventRepository.countDocuments(collegeFilter),
+      userRepository.countDocuments({ isBlocked: true, ...collegeFilter }),
+      userRepository.countDocuments({ isActive: false, ...collegeFilter }),
+      userRepository.countDocuments({ role: 'student', isActive: false, ...collegeFilter }),
+      userRepository.countDocuments({ role: 'teacher', isActive: false, ...collegeFilter }),
     ]);
 
     return {

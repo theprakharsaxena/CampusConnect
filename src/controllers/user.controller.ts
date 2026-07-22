@@ -43,6 +43,7 @@ export class UserController {
         skills: req.query.skills as string,
         page,
         limit,
+        college: req.user!.college || 'Bareilly College',
       });
       sendSuccess(res, result.users, undefined, 200, result.pagination);
     } catch (error) {
@@ -165,7 +166,7 @@ export class DeveloperController {
         req.query.page as string,
         req.query.limit as string
       );
-      const result = await developerService.getAllUsers(page, limit);
+      const result = await developerService.getAllUsers(page, limit, req.user!.college || 'Bareilly College');
       sendSuccess(res, result.users, undefined, 200, result.pagination);
     } catch (error) {
       next(error);
@@ -175,7 +176,7 @@ export class DeveloperController {
   blockUser = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       const user = await developerService.blockUser(getParam(req.params.id), req.user!.userId, req.user!.role);
-      sendSuccess(res, user, 'User blocked');
+      sendSuccess(res, user, 'User account blocked successfully');
     } catch (error) {
       next(error);
     }
@@ -184,7 +185,7 @@ export class DeveloperController {
   unblockUser = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       const user = await developerService.unblockUser(getParam(req.params.id), req.user!.userId, req.user!.role);
-      sendSuccess(res, user, 'User unblocked');
+      sendSuccess(res, user, 'User account unblocked successfully');
     } catch (error) {
       next(error);
     }
@@ -193,7 +194,7 @@ export class DeveloperController {
   deleteUser = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       await developerService.deleteUser(getParam(req.params.id), req.user!.userId, req.user!.role);
-      sendSuccess(res, undefined, 'User deleted');
+      sendSuccess(res, undefined, 'User account deleted successfully');
     } catch (error) {
       next(error);
     }
@@ -217,9 +218,9 @@ export class DeveloperController {
     }
   };
 
-  getAnalytics = async (_req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  getAnalytics = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const analytics = await developerService.getAnalytics();
+      const analytics = await developerService.getAnalytics(req.user!.college || 'Bareilly College');
       sendSuccess(res, analytics);
     } catch (error) {
       next(error);

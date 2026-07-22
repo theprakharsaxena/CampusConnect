@@ -11,6 +11,7 @@ export interface IConversation extends Document {
   lastMessage?: Types.ObjectId;
   lastMessageAt?: Date;
   deletedFor: IConversationDeletedFor[];
+  college: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -28,10 +29,12 @@ const conversationSchema = new Schema<IConversation>(
         deletedAt: { type: Date, required: true, default: Date.now },
       },
     ],
+    college: { type: String, default: 'Bareilly College', required: true },
   },
   { timestamps: true }
 );
 
+conversationSchema.index({ college: 1 });
 conversationSchema.index({ participants: 1 });
 conversationSchema.index({ lastMessageAt: -1 });
 

@@ -3,6 +3,7 @@ import {
   messageRepository,
 } from '../repositories/message.repository';
 import { notificationRepository } from '../repositories/notification.repository';
+import { userRepository } from '../repositories/user.repository';
 import { Types } from 'mongoose';
 import { AppError, buildPagination } from '../utils/response';
 import { IConversation, IMessage } from '../models';
@@ -17,13 +18,23 @@ export class MessageService {
       throw new AppError('Cannot create conversation with yourself', 400);
     }
 
+    const user = await userRepository.findById(userId);
+    const participant = await userRepository.findById(participantId);
+    if (!user || !participant) {
+      throw new AppError('User not found', 404);
+    }
+
+    if (user.college !== participant.college) {
+      throw new AppError('Users must belong to the same college to converse', 403);
+    }
+
     const existing = await conversationRepository.findByParticipants(
       userId,
       participantId
     );
     if (existing) return existing;
 
-    return conversationRepository.create([userId, participantId]);
+    return conversationRepository.create([userId, participantId], user.college);
   }
 
   async getConversations(userId: string, page: number, limit: number) {

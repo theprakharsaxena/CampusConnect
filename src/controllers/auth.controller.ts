@@ -42,8 +42,19 @@ export class AuthController {
 
   login = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { email, password } = req.body;
-      const result = await authService.login(email, password);
+      const { email, password, college } = req.body;
+      const result = await authService.login(email, password, college);
+      if (result.multipleColleges) {
+        res.status(200).json({
+          success: true,
+          message: 'Multiple colleges registered',
+          data: {
+            multipleColleges: true,
+            colleges: result.colleges,
+          },
+        });
+        return;
+      }
       sendSuccess(res, result, 'Login successful');
     } catch (error) {
       next(error);

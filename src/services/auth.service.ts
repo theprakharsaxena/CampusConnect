@@ -6,7 +6,7 @@ import {
   verifyRefreshToken,
 } from '../utils/jwt';
 import { AppError } from '../utils/response';
-import { EmailVerification, IUser } from '../models';
+import { User, EmailVerification, IUser } from '../models';
 import { UserRole } from '../types';
 import crypto from 'crypto';
 import { config } from '../config';
@@ -18,6 +18,7 @@ interface RegisterInput {
   email: string;
   password: string;
   role?: UserRole;
+  college?: string;
   department?: string;
   batch?: string;
   rollNumber?: string;
@@ -25,9 +26,11 @@ interface RegisterInput {
 }
 
 interface LoginResult {
-  user: Partial<IUser>;
-  accessToken: string;
-  refreshToken: string;
+  user?: Partial<IUser>;
+  accessToken?: string;
+  refreshToken?: string;
+  multipleColleges?: boolean;
+  colleges?: string[];
 }
 
 const sanitizeUser = (user: IUser): Partial<IUser> => {
@@ -80,9 +83,9 @@ export class AuthService {
 
   async register(input: RegisterInput): Promise<LoginResult> {
     const normalizedEmail = input.email.toLowerCase();
-    const existing = await userRepository.findByEmail(normalizedEmail);
+    const existing = await User.findOne({ email: normalizedEmail, college: input.college });
     if (existing) {
-      throw new AppError('Email already registered', 409);
+      throw new AppError('An account with this email is already registered in this college', 409);
     }
 
     const verificationRecord = await EmailVerification.findOne({
@@ -120,10 +123,29 @@ export class AuthService {
     };
   }
 
-  async login(email: string, password: string): Promise<LoginResult> {
-    const user = await userRepository.findByEmail(email, true);
-    if (!user) {
+  async login(email: string, password: string, college?: string): Promise<LoginResult> {
+    const users = await User.find({ email: email.toLowerCase() }).select(
+      '+password +refreshToken +passwordResetToken +passwordResetExpires'
+    );
+
+    if (users.length === 0) {
       throw new AppError('This email is not registered', 404);
+    }
+
+    let user: IUser;
+    if (users.length > 1 && !college) {
+      return {
+        multipleColleges: true,
+        colleges: users.map((u: any) => u.college),
+      };
+    } else if (college) {
+      const matched = users.find((u: any) => u.college === college);
+      if (!matched) {
+        throw new AppError('This email is not registered in the selected college', 404);
+      }
+      user = matched;
+    } else {
+      user = users[0];
     }
 
     if (user.isBlocked) {
@@ -277,6 +299,7 @@ export class AuthService {
       userId: user._id.toString(),
       email: user.email,
       role: user.role,
+      college: user.college || 'Bareilly College',
     };
     return {
       accessToken: generateAccessToken(payload),

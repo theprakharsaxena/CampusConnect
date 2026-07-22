@@ -3,8 +3,8 @@ import { Message, IMessage } from '../models';
 import { Types } from 'mongoose';
 
 export class ConversationRepository {
-  async create(participants: string[]): Promise<IConversation> {
-    const conversation = await Conversation.create({ participants });
+  async create(participants: string[], college: string): Promise<IConversation> {
+    const conversation = await Conversation.create({ participants, college });
     return conversation.populate('participants', 'name email profileImage');
   }
 

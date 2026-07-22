@@ -18,6 +18,7 @@ export interface IOpportunity extends Document {
   reviewedAt?: Date;
   rejectionReason?: string;
   rejectionCount: number;
+  college: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -45,17 +46,19 @@ const opportunitySchema = new Schema<IOpportunity>(
     reviewedAt: { type: Date },
     rejectionReason: { type: String },
     rejectionCount: { type: Number, default: 0 },
+    college: { type: String, default: 'Bareilly College', required: true },
   },
   { timestamps: true }
 );
 
+opportunitySchema.index({ college: 1, createdAt: -1 });
 opportunitySchema.index({ postedBy: 1, createdAt: -1 });
 opportunitySchema.index({ type: 1 });
 opportunitySchema.index({ company: 1 });
 opportunitySchema.index({ skills: 1 });
 opportunitySchema.index({ deadline: 1 });
 opportunitySchema.index({ createdAt: -1 });
-opportunitySchema.index({ status: 1, createdAt: -1 });
+opportunitySchema.index({ status: 1, college: 1, createdAt: -1 });
 opportunitySchema.index({ title: 'text', description: 'text', company: 'text' });
 
 export const Opportunity = model<IOpportunity>('Opportunity', opportunitySchema);

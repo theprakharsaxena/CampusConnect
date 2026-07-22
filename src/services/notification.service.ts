@@ -31,14 +31,14 @@ export class NotificationService {
 }
 
 export class FeedService {
-  async getFeed(page: number, limit: number, sort: FeedSort = 'latest', _userRole?: UserRole) {
+  async getFeed(page: number, limit: number, sort: FeedSort = 'latest', _userRole?: UserRole, college?: string) {
     const fetchLimit = limit * 3;
     // Unified feed always shows only approved content
 
     const [postsResult, opportunities, events] = await Promise.all([
-      postRepository.findFeed(1, fetchLimit, sort, undefined, true),
-      opportunityRepository.findRecent(fetchLimit, true),
-      eventRepository.findRecent(fetchLimit, true),
+      postRepository.findFeed(1, fetchLimit, sort, undefined, true, college),
+      opportunityRepository.findRecent(fetchLimit, true, college),
+      eventRepository.findRecent(fetchLimit, true, college),
     ]);
 
     const feedItems = [

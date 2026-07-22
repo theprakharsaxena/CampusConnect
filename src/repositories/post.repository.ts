@@ -26,13 +26,15 @@ export class PostRepository {
     limit: number,
     sort: 'latest' | 'trending' = 'latest',
     authorId?: string,
-    onlyApproved?: boolean
+    onlyApproved?: boolean,
+    college?: string
   ): Promise<{ posts: IPost[]; total: number }> {
     const skip = (page - 1) * limit;
     const sortField = sort === 'trending' ? '-likesCount' : '-createdAt';
     const filter: FilterQuery<IPost> = {};
     if (authorId) filter.author = authorId;
     if (onlyApproved) filter.status = 'approved';
+    if (college) filter.college = college;
 
     const [posts, total] = await Promise.all([
       Post.find(filter)
@@ -46,9 +48,10 @@ export class PostRepository {
     return { posts, total };
   }
 
-  async findTrending(limit: number, onlyApproved?: boolean): Promise<IPost[]> {
+  async findTrending(limit: number, onlyApproved?: boolean, college?: string): Promise<IPost[]> {
     const filter: FilterQuery<IPost> = {};
     if (onlyApproved) filter.status = 'approved';
+    if (college) filter.college = college;
 
     return Post.find(filter)
       .populate('author', 'name email profileImage role department')

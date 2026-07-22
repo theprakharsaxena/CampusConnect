@@ -22,10 +22,14 @@ export class OpportunityService {
 
     const status: ContentStatus = isManagementRole(posterRole) ? 'approved' : 'pending';
 
+    const poster = await userRepository.findById(postedBy);
+    const college = poster?.college || 'Bareilly College';
+
     const opportunity = await opportunityRepository.create({
       ...data,
       postedBy: postedBy as unknown as IOpportunity['postedBy'],
       status,
+      college,
     });
 
     // Notify connections when opportunity is auto-approved

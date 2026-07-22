@@ -57,7 +57,7 @@ export class FeedController {
         req.query.limit as string
       );
       const sort = (req.query.sort as FeedSort) || 'latest';
-      const result = await feedService.getFeed(page, limit, sort, req.user!.role);
+      const result = await feedService.getFeed(page, limit, sort, req.user!.role, req.user!.college || 'Bareilly College');
       sendSuccess(res, result.feed, undefined, 200, result.pagination);
     } catch (error) {
       next(error);

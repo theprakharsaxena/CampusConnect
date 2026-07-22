@@ -8,6 +8,22 @@ import { startDailyChallengeNotification } from './cron/dailyChallenge';
 const startServer = async (): Promise<void> => {
   await connectDatabase();
 
+  // Run legacy data migration
+  try {
+    const { User, Post, Event, Opportunity, Conversation, Challenge } = await import('./models');
+    await Promise.all([
+      User.updateMany({ college: { $exists: false } }, { $set: { college: 'Bareilly College' } }),
+      Post.updateMany({ college: { $exists: false } }, { $set: { college: 'Bareilly College' } }),
+      Event.updateMany({ college: { $exists: false } }, { $set: { college: 'Bareilly College' } }),
+      Opportunity.updateMany({ college: { $exists: false } }, { $set: { college: 'Bareilly College' } }),
+      Conversation.updateMany({ college: { $exists: false } }, { $set: { college: 'Bareilly College' } }),
+      Challenge.updateMany({ college: { $exists: false } }, { $set: { college: 'Bareilly College' } }),
+    ]);
+    console.log('Database migration completed successfully (default college set to Bareilly College).');
+  } catch (err) {
+    console.error('Database migration failed:', err);
+  }
+
   const httpServer = http.createServer(app);
   initializeSocket(httpServer);
 

@@ -30,12 +30,14 @@ export class EventRepository {
     page: number,
     limit: number,
     organizerId?: string,
-    onlyApproved?: boolean
+    onlyApproved?: boolean,
+    college?: string
   ): Promise<{ events: IEvent[]; total: number }> {
     const skip = (page - 1) * limit;
     const filter: Record<string, unknown> = {};
     if (organizerId) filter.organizer = organizerId;
     if (onlyApproved) filter.status = 'approved';
+    if (college) filter.college = college;
 
     const [events, total] = await Promise.all([
       Event.find(filter)
@@ -48,9 +50,10 @@ export class EventRepository {
     return { events, total };
   }
 
-  async findRecent(limit: number, onlyApproved?: boolean): Promise<IEvent[]> {
+  async findRecent(limit: number, onlyApproved?: boolean, college?: string): Promise<IEvent[]> {
     const filter: Record<string, unknown> = {};
     if (onlyApproved) filter.status = 'approved';
+    if (college) filter.college = college;
 
     return Event.find(filter)
       .populate('organizer', 'name email profileImage role department')
@@ -88,8 +91,8 @@ export class EventRepository {
     return event.populate('organizer', 'name email profileImage role department');
   }
 
-  async countDocuments(): Promise<number> {
-    return Event.countDocuments();
+  async countDocuments(filter: Record<string, unknown> = {}): Promise<number> {
+    return Event.countDocuments(filter);
   }
 }
 

@@ -18,6 +18,7 @@ export interface IPost extends Document {
   reviewedAt?: Date;
   rejectionReason?: string;
   rejectionCount: number;
+  college: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -41,15 +42,17 @@ const postSchema = new Schema<IPost>(
     reviewedAt: { type: Date },
     rejectionReason: { type: String },
     rejectionCount: { type: Number, default: 0 },
+    college: { type: String, default: 'Bareilly College', required: true },
   },
   { timestamps: true }
 );
 
+postSchema.index({ college: 1, createdAt: -1 });
 postSchema.index({ author: 1, createdAt: -1 });
 postSchema.index({ createdAt: -1 });
 postSchema.index({ likesCount: -1 });
 postSchema.index({ tags: 1 });
-postSchema.index({ status: 1, createdAt: -1 });
+postSchema.index({ status: 1, college: 1, createdAt: -1 });
 postSchema.index({ content: 'text', tags: 'text' });
 
 export const Post = model<IPost>('Post', postSchema);

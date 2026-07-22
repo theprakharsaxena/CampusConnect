@@ -35,7 +35,7 @@ export class UserRepository {
   }
 
   async findWithFilters(filters: UserFilterQuery): Promise<{ users: IUser[]; total: number }> {
-    const { search, role, department, batch, skills, page = 1, limit = 10 } = filters;
+    const { search, role, department, batch, skills, page = 1, limit = 10, college } = filters;
     const query: FilterQuery<IUser> = { isBlocked: false };
 
     if (search) {
@@ -48,6 +48,7 @@ export class UserRepository {
       const skillArray = Array.isArray(skills) ? skills : [skills];
       query.skills = { $in: skillArray };
     }
+    if (college) query.college = college;
 
     const skip = (page - 1) * limit;
     const [users, total] = await Promise.all([
@@ -58,22 +59,26 @@ export class UserRepository {
     return { users, total };
   }
 
-  async findAll(page = 1, limit = 10): Promise<{ users: IUser[]; total: number }> {
+  async findAll(page = 1, limit = 10, college?: string): Promise<{ users: IUser[]; total: number }> {
     const skip = (page - 1) * limit;
+    const query: FilterQuery<IUser> = {};
+    if (college) query.college = college;
+
     const [users, total] = await Promise.all([
-      User.find().skip(skip).limit(limit).sort({ createdAt: -1 }),
-      User.countDocuments(),
+      User.find(query).skip(skip).limit(limit).sort({ createdAt: -1 }),
+      User.countDocuments(query),
     ]);
     return { users, total };
   }
 
   async findByRoles(
     roles: UserRole[],
-    filters: { isActive?: boolean; page?: number; limit?: number }
+    filters: { isActive?: boolean; page?: number; limit?: number; college?: string }
   ): Promise<{ users: IUser[]; total: number }> {
-    const { isActive, page = 1, limit = 10 } = filters;
+    const { isActive, page = 1, limit = 10, college } = filters;
     const query: FilterQuery<IUser> = { role: { $in: roles } };
     if (isActive !== undefined) query.isActive = isActive;
+    if (college) query.college = college;
 
     const skip = (page - 1) * limit;
     const [users, total] = await Promise.all([
@@ -85,7 +90,7 @@ export class UserRepository {
 
   async findManageableByRole(
     managerRole: UserRole,
-    filters: { isActive?: boolean; page?: number; limit?: number }
+    filters: { isActive?: boolean; page?: number; limit?: number; college?: string }
   ): Promise<{ users: IUser[]; total: number }> {
     return this.findByRoles(MANAGEABLE_ROLES[managerRole], filters);
   }

@@ -59,6 +59,9 @@ export class PostService {
     // Developer/HOD/Teacher posts are auto-approved; students/alumni go to review
     const status: ContentStatus = isManagementRole(authorRole) ? 'approved' : 'pending';
 
+    const author = await userRepository.findById(authorId);
+    const college = author?.college || 'Bareilly College';
+
     const post = await postRepository.create({
       author: authorId as unknown as IPost['author'],
       content,
@@ -66,6 +69,7 @@ export class PostService {
       images,
       pdfUrl,
       status,
+      college,
     });
 
     // Notify connections when post is auto-approved (management roles)
@@ -201,18 +205,18 @@ export class PostService {
     await postRepository.delete(postId);
   }
 
-  async getFeed(page: number, limit: number, sort: 'latest' | 'trending' = 'latest', authorId?: string, _userRole?: UserRole) {
+  async getFeed(page: number, limit: number, sort: 'latest' | 'trending' = 'latest', authorId?: string, _userRole?: UserRole, college?: string) {
     // Feed always shows only approved content for all users.
     // Developer/HOD/Teacher use the Review Content screen to see pending items.
-    const { posts, total } = await postRepository.findFeed(page, limit, sort, authorId, true);
+    const { posts, total } = await postRepository.findFeed(page, limit, sort, authorId, true, college);
     return {
       posts,
       pagination: buildPagination(page, limit, total),
     };
   }
 
-  async getTrendingPosts(limit: number, _userRole?: UserRole) {
-    return postRepository.findTrending(limit, true);
+  async getTrendingPosts(limit: number, _userRole?: UserRole, college?: string) {
+    return postRepository.findTrending(limit, true, college);
   }
 
   async likePost(postId: string, userId: string): Promise<IPost> {

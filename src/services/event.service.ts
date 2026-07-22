@@ -32,10 +32,14 @@ export class EventService {
 
     const status: ContentStatus = isManagementRole(organizerRole) ? 'approved' : 'pending';
 
+    const organizer = await userRepository.findById(organizerId);
+    const college = organizer?.college || 'Bareilly College';
+
     const event = await eventRepository.create({
       ...eventData,
       organizer: organizerId as unknown as IEvent['organizer'],
       status,
+      college,
     });
 
     // Notify connections when event is auto-approved
@@ -142,9 +146,9 @@ export class EventService {
     await eventRepository.delete(id);
   }
 
-  async getAll(page: number, limit: number, organizerId?: string, _userRole?: UserRole) {
+  async getAll(page: number, limit: number, organizerId?: string, _userRole?: UserRole, college?: string) {
     // Events feed always shows only approved content
-    const { events, total } = await eventRepository.findAll(page, limit, organizerId, true);
+    const { events, total } = await eventRepository.findAll(page, limit, organizerId, true, college);
     return {
       events,
       pagination: buildPagination(page, limit, total),

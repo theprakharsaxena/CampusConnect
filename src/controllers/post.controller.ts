@@ -87,7 +87,7 @@ export class PostController {
       );
       const sort = (req.query.sort as 'latest' | 'trending') || 'latest';
       const authorId = req.query.authorId as string | undefined;
-      const result = await postService.getFeed(page, limit, sort, authorId, req.user!.role);
+      const result = await postService.getFeed(page, limit, sort, authorId, req.user!.role, req.user!.college || 'Bareilly College');
       sendSuccess(res, result.posts, undefined, 200, result.pagination);
     } catch (error) {
       next(error);
@@ -97,7 +97,7 @@ export class PostController {
   getTrending = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       const limit = parseInt(req.query.limit as string) || 10;
-      const posts = await postService.getTrendingPosts(limit, req.user!.role);
+      const posts = await postService.getTrendingPosts(limit, req.user!.role, req.user!.college || 'Bareilly College');
       sendSuccess(res, posts);
     } catch (error) {
       next(error);

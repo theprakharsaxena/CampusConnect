@@ -43,6 +43,7 @@ export interface IChallenge extends Document {
   submissions: IChallengeSubmission[];
   totalAttempts: number;
   totalCorrect: number;
+  college: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -92,8 +93,12 @@ const challengeSchema = new Schema<IChallenge>(
     submissions: [submissionSchema],
     totalAttempts: { type: Number, default: 0 },
     totalCorrect: { type: Number, default: 0 },
+    college: { type: String, default: 'Bareilly College', required: true },
   },
   { timestamps: true }
 );
+
+challengeSchema.index({ date: 1, college: 1 }, { unique: true });
+challengeSchema.index({ college: 1 });
 
 export const Challenge = model<IChallenge>('Challenge', challengeSchema);

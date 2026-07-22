@@ -21,6 +21,9 @@ export const registerValidator = [
     .optional()
     .isIn(['student', 'teacher', 'hod', 'alumni', 'developer'])
     .withMessage('Invalid role'),
+  body('college')
+    .isIn(['Bareilly College', 'Test College'])
+    .withMessage('Invalid college selection'),
   body('department').optional().trim(),
   body('batch').optional().trim(),
   body('rollNumber')

@@ -24,6 +24,7 @@ export interface IEvent extends Document {
   reviewedAt?: Date;
   rejectionReason?: string;
   rejectionCount: number;
+  college: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -56,14 +57,16 @@ const eventSchema = new Schema<IEvent>(
     reviewedAt: { type: Date },
     rejectionReason: { type: String },
     rejectionCount: { type: Number, default: 0 },
+    college: { type: String, default: 'Bareilly College', required: true },
   },
   { timestamps: true }
 );
 
+eventSchema.index({ college: 1, eventDate: 1 });
 eventSchema.index({ organizer: 1, eventDate: -1 });
 eventSchema.index({ eventDate: 1 });
 eventSchema.index({ createdAt: -1 });
-eventSchema.index({ status: 1, createdAt: -1 });
+eventSchema.index({ status: 1, college: 1, eventDate: 1 });
 eventSchema.index({ title: 'text', description: 'text', location: 'text' });
 
 export const Event = model<IEvent>('Event', eventSchema);
