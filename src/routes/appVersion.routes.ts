@@ -7,22 +7,30 @@ import { validate } from '../middlewares/validate.middleware';
 const router = Router();
 const controller = new AppVersionController();
 
-const publishValidator = [
-  body('version').trim().notEmpty().withMessage('Version is required'),
-  body('apkUrl').trim().isURL().withMessage('Valid APK URL is required'),
-  body('releaseNotes').optional().isArray().withMessage('Release notes must be an array of strings'),
-  body('isMandatory').optional().isBoolean().withMessage('isMandatory must be a boolean'),
+const updateConfigValidator = [
+  body('versions')
+    .isArray()
+    .withMessage('versions must be an array'),
+  body('versions.*.version')
+    .trim()
+    .notEmpty()
+    .withMessage('Each entry must have a version string'),
+  body('versions.*.quickLogin')
+    .isBoolean()
+    .withMessage('Each entry must have a quickLogin boolean'),
 ];
 
-router.get('/latest', controller.getLatest);
-router.get('/history', controller.getHistory);
-router.post(
-  '/',
+// Public — app reads this on startup to decide Quick Login visibility
+router.get('/config', controller.getConfig);
+
+// Developer-only — update the version config
+router.put(
+  '/config',
   authenticate,
   authorize('developer'),
-  publishValidator,
+  updateConfigValidator,
   validate,
-  controller.publish
+  controller.updateConfig
 );
 
 export default router;

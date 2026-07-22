@@ -10,7 +10,7 @@ const startServer = async (): Promise<void> => {
 
   // Run legacy data migration
   try {
-    const { User, Post, Event, Opportunity, Conversation, Challenge } = await import('./models');
+    const { User, Post, Event, Opportunity, Conversation, Challenge, VersionConfig } = await import('./models');
     await Promise.all([
       User.updateMany({ college: { $exists: false } }, { $set: { college: 'Bareilly College' } }),
       Post.updateMany({ college: { $exists: false } }, { $set: { college: 'Bareilly College' } }),
@@ -19,6 +19,24 @@ const startServer = async (): Promise<void> => {
       Conversation.updateMany({ college: { $exists: false } }, { $set: { college: 'Bareilly College' } }),
       Challenge.updateMany({ college: { $exists: false } }, { $set: { college: 'Bareilly College' } }),
     ]);
+
+    // Ensure the default version config exists with 1.0.0 -> quickLogin: true
+    const configExists = await VersionConfig.findOne();
+    if (!configExists) {
+      await VersionConfig.create({
+        versions: [{ version: '1.0.0', quickLogin: true }],
+      });
+      console.log('VersionConfig seeded: version 1.0.0 initialized with quickLogin: true.');
+    } else {
+      // If version 1.0.0 is not in the list, push it
+      const hasVersion100 = configExists.versions.some(v => v.version === '1.0.0');
+      if (!hasVersion100) {
+        configExists.versions.push({ version: '1.0.0', quickLogin: true });
+        await configExists.save();
+        console.log('Added version 1.0.0 to VersionConfig with quickLogin: true.');
+      }
+    }
+
     console.log('Database migration completed successfully (default college set to Bareilly College).');
   } catch (err) {
     console.error('Database migration failed:', err);

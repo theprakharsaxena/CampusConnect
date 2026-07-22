@@ -1,19 +1,28 @@
 import { Schema, model, Document } from 'mongoose';
 
-export interface IAppVersion extends Document {
+export interface IVersionEntry {
   version: string;
-  apkUrl: string;
-  releaseNotes: string[];
-  isMandatory: boolean;
-  createdAt: Date;
+  quickLogin: boolean;
 }
 
-const AppVersionSchema = new Schema<IAppVersion>({
-  version: { type: String, required: true, unique: true },
-  apkUrl: { type: String, required: true },
-  releaseNotes: [{ type: String }],
-  isMandatory: { type: Boolean, default: false },
-  createdAt: { type: Date, default: Date.now },
-});
+export interface IVersionConfig extends Document {
+  versions: IVersionEntry[];
+}
 
-export const AppVersion = model<IAppVersion>('AppVersion', AppVersionSchema);
+const VersionEntrySchema = new Schema<IVersionEntry>(
+  {
+    version:    { type: String, required: true },
+    quickLogin: { type: Boolean, required: true },
+  },
+  { _id: false }
+);
+
+const VersionConfigSchema = new Schema<IVersionConfig>(
+  {
+    versions: { type: [VersionEntrySchema], default: [] },
+  },
+  { timestamps: false }
+);
+
+// Singleton — only one config document ever exists
+export const VersionConfig = model<IVersionConfig>('VersionConfig', VersionConfigSchema);

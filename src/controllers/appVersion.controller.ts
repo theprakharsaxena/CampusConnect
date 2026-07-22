@@ -1,38 +1,36 @@
 import { Request, Response, NextFunction } from 'express';
-import { AppVersion } from '../models';
+import { VersionConfig } from '../models';
 import { sendSuccess } from '../utils/response';
 
 export class AppVersionController {
-  getLatest = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
+  /**
+   * GET /api/v1/app-version/config
+   * Returns the full list of version entries with their quickLogin flags.
+   * Response shape: { versions: [{ version, quickLogin }] }
+   */
+  getConfig = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const latest = await AppVersion.findOne().sort({ createdAt: -1 });
-      sendSuccess(res, latest || null);
+      const config = await VersionConfig.findOne();
+      sendSuccess(res, { versions: config?.versions ?? [] });
     } catch (error) {
       next(error);
     }
   };
 
-  getHistory = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
+  /**
+   * PUT /api/v1/app-version/config
+   * Upserts the version config. Body: { versions: [{ version, quickLogin }] }
+   * Developer-only route.
+   */
+  updateConfig = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const history = await AppVersion.find().sort({ createdAt: -1 });
-      sendSuccess(res, history);
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  publish = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const { version, apkUrl, releaseNotes, isMandatory } = req.body;
-      
-      const newVersion = await AppVersion.create({
-        version,
-        apkUrl,
-        releaseNotes: releaseNotes || [],
-        isMandatory: isMandatory || false,
-      });
-
-      sendSuccess(res, newVersion, 'Version published successfully', 201);
+      const { versions } = req.body as { versions: { version: string; quickLogin: boolean }[] };
+      const config = await VersionConfig.findOneAndUpdate(
+        {},
+        { $set: { versions } },
+        { upsert: true, new: true }
+      );
+      sendSuccess(res, { versions: config.versions }, 'Version config updated');
     } catch (error) {
       next(error);
     }
