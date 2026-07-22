@@ -130,10 +130,6 @@ export class AuthService {
       throw new AppError('Your account has been blocked. Please contact administration.', 403);
     }
 
-    if (!user.isActive) {
-      throw new AppError('Your account is pending approval by administration', 403);
-    }
-
     const isValid = await comparePassword(password, user.password);
     if (!isValid) {
       throw new AppError('Incorrect password. Please check and try again.', 401);
