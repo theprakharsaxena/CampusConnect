@@ -9,3 +9,4 @@ export { Message, IMessage } from './Message.model';
 export { Notification, INotification } from './Notification.model';
 export { EmailVerification, IEmailVerification } from './EmailVerification.model';
 export { Challenge, IChallenge } from './Challenge.model';
+export { AppVersion, IAppVersion } from './AppVersion.model';

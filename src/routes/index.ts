@@ -12,6 +12,7 @@ import developerRoutes from './developer.routes';
 import moderationRoutes from './moderation.routes';
 import challengeRoutes from './challenge.routes';
 import compilerRoutes from './compiler.routes';
+import appVersionRoutes from './appVersion.routes';
 import { sendSuccess } from '../utils/response';
 import { config } from '../config';
 
@@ -43,5 +44,6 @@ router.use('/developer', developerRoutes);
 router.use('/moderation', moderationRoutes);
 router.use('/challenges', challengeRoutes);
 router.use('/compiler', compilerRoutes);
+router.use('/app-version', appVersionRoutes);
 
 export default router;
