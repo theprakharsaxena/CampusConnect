@@ -1,25 +1,12 @@
 import { Schema, model, Document } from 'mongoose';
 
-export interface IVersionEntry {
-  version: string;
-  quickLogin: boolean;
-}
-
 export interface IVersionConfig extends Document {
-  versions: IVersionEntry[];
+  enabledVersions: string[];
 }
-
-const VersionEntrySchema = new Schema<IVersionEntry>(
-  {
-    version:    { type: String, required: true },
-    quickLogin: { type: Boolean, required: true },
-  },
-  { _id: false }
-);
 
 const VersionConfigSchema = new Schema<IVersionConfig>(
   {
-    versions: { type: [VersionEntrySchema], default: [] },
+    enabledVersions: { type: [String], default: [] },
   },
   { timestamps: false }
 );
