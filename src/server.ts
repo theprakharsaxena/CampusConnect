@@ -12,12 +12,12 @@ const startServer = async (): Promise<void> => {
   try {
     const { User, Post, Event, Opportunity, Conversation, Challenge } = await import('./models');
     await Promise.all([
-      User.updateMany({ college: { $exists: false } }, { $set: { college: 'Bareilly College' } }),
-      Post.updateMany({ college: { $exists: false } }, { $set: { college: 'Bareilly College' } }),
-      Event.updateMany({ college: { $exists: false } }, { $set: { college: 'Bareilly College' } }),
-      Opportunity.updateMany({ college: { $exists: false } }, { $set: { college: 'Bareilly College' } }),
-      Conversation.updateMany({ college: { $exists: false } }, { $set: { college: 'Bareilly College' } }),
-      Challenge.updateMany({ college: { $exists: false } }, { $set: { college: 'Bareilly College' } }),
+      User.updateMany({ $or: [{ college: { $exists: false } }, { college: null }] }, { $set: { college: 'Bareilly College' } }),
+      Post.updateMany({ $or: [{ college: { $exists: false } }, { college: null }] }, { $set: { college: 'Bareilly College' } }),
+      Event.updateMany({ $or: [{ college: { $exists: false } }, { college: null }] }, { $set: { college: 'Bareilly College' } }),
+      Opportunity.updateMany({ $or: [{ college: { $exists: false } }, { college: null }] }, { $set: { college: 'Bareilly College' } }),
+      Conversation.updateMany({ $or: [{ college: { $exists: false } }, { college: null }] }, { $set: { college: 'Bareilly College' } }),
+      Challenge.updateMany({ $or: [{ college: { $exists: false } }, { college: null }] }, { $set: { college: 'Bareilly College' } }),
     ]);
 
     console.log('Database migration completed successfully (default college set to Bareilly College).');
