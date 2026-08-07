@@ -180,6 +180,8 @@ export async function checkContentWithAI(text: string | undefined): Promise<void
 Analyze if the user's content (posts, events, or opportunities) is appropriate to be published.
 Content MUST NOT contain highly offensive, profane, uncensored bad words, hate speech, or explicit sexual language.
 
+IMPORTANT: Educational resources, coding challenges, webinars, tutorials, and programming platform links (e.g. Scaler, LeetCode, GitHub, LinkedIn, Hackerrank, GeeksforGeeks, YouTube, etc.) are explicitly allowed and encouraged. Do NOT reject or mark them as promotional or external platforms.
+
 Respond in EXACTLY the following JSON format (no Markdown block, no backticks, just raw JSON):
 {
   "approved": true or false,
