@@ -8,6 +8,7 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "seed": "tsx src/scripts/seed.ts",
+    "seed:tc": "tsx src/scripts/seedTestCollegeOnly.ts",
     "seed:challenges": "tsx src/scripts/seedChallenges.ts",
     "lint": "eslint src --ext .ts",
     "typecheck": "tsc --noEmit"
