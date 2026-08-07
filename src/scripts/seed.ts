@@ -8,73 +8,101 @@ dotenv.config();
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/campusconnect';
 
-const demoUsers = [
+// --- BAREILLY COLLEGE DATA (Only the two specific accounts) ---
+const bcUsers = [
   {
-    name: 'Developer User',
+    name: 'Developer BC',
     email: 'prakharsaxena5125@gmail.com',
     password: 'Developer@12345',
     role: 'developer' as const,
-    department: 'Developeristration',
-    bio: 'Platform developer',
+    college: 'Bareilly College',
+    department: 'Administration',
+    bio: 'Platform developer for Bareilly College',
     isVerified: true,
   },
   {
-    name: 'Dr. Sarah Johnson',
+    name: 'Dr. Sarah Johnson (BC)',
     email: 'romasaxena1234@gmail.com',
     password: 'Teacher@123',
     role: 'hod' as const,
+    college: 'Bareilly College',
     department: 'Computer Science',
     designation: 'Head of Department',
-    bio: 'HOD of Computer Science Department',
+    bio: 'HOD of Computer Science Department at Bareilly College',
     skills: ['Leadership', 'Research', 'Machine Learning'],
     isVerified: true,
   },
+];
+
+// --- TEST COLLEGE DATA (Contains all demo/raw accounts) ---
+const tcUsers = [
   {
-    name: 'Prof. Michael Chen',
-    email: 'michael.chen@campusconnect.edu',
+    name: 'Developer TC',
+    email: 'developer.test@testcollege.edu',
+    password: 'Developer@12345',
+    role: 'developer' as const,
+    college: 'Test College',
+    department: 'Administration',
+    bio: 'Developer for Test College',
+    isVerified: true,
+  },
+  {
+    name: 'Sarah HOD (TC)',
+    email: 'sarah.test@hod.testcollege.edu',
+    password: 'Teacher@123',
+    role: 'hod' as const,
+    college: 'Test College',
+    department: 'Computer Science',
+    bio: 'HOD of Test College Computer Science',
+    isVerified: true,
+  },
+  {
+    name: 'Michael Teacher (TC)',
+    email: 'michael.test@teacher.testcollege.edu',
     password: 'Teacher@123',
     role: 'teacher' as const,
+    college: 'Test College',
     department: 'Computer Science',
-    designation: 'Associate Professor',
-    bio: 'Teaching Data Structures and Algorithms',
-    skills: ['Algorithms', 'Data Structures', 'Python'],
+    designation: 'Assistant Professor',
+    bio: 'Test college teacher',
     isVerified: true,
   },
   {
-    name: 'Alice Williams',
-    email: 'alice.williams@student.campusconnect.edu',
+    name: 'Alice Student (TC)',
+    email: 'alice.test@student.testcollege.edu',
     password: 'Student@123',
     role: 'student' as const,
+    college: 'Test College',
     department: 'Computer Science',
     batch: '2024',
-    bio: 'CS student passionate about web development',
-    skills: ['JavaScript', 'React', 'Node.js', 'MongoDB'],
-    githubUrl: 'https://github.com/alicewilliams',
+    semester: 4,
+    rollNumber: '111111',
+    bio: 'Test college student 1',
     isVerified: true,
   },
   {
-    name: 'Bob Martinez',
-    email: 'bob.martinez@student.campusconnect.edu',
+    name: 'Bob Student (TC)',
+    email: 'bob.test@student.testcollege.edu',
     password: 'Student@123',
     role: 'student' as const,
+    college: 'Test College',
     department: 'Computer Science',
-    batch: '2023',
-    bio: 'Final year student looking for internships',
-    skills: ['Python', 'Machine Learning', 'TensorFlow'],
+    batch: '2024',
+    semester: 4,
+    rollNumber: '222222',
+    bio: 'Test college student 2',
     isVerified: true,
   },
   {
-    name: 'Carol Davis',
-    email: 'carol.davis@alumni.campusconnect.edu',
+    name: 'Carol Alumni (TC)',
+    email: 'carol.test@alumni.testcollege.edu',
     password: 'Alumni@123',
     role: 'alumni' as const,
+    college: 'Test College',
     department: 'Computer Science',
     batch: '2020',
-    company: 'Google',
-    designation: 'Software Engineer',
-    bio: 'CS alum working at Google, happy to help juniors',
-    skills: ['System Design', 'Go', 'Kubernetes'],
-    linkedinUrl: 'https://linkedin.com/in/caroldavis',
+    rollNumber: '333333',
+    bio: 'Test college alumni',
     isVerified: true,
   },
 ];
@@ -93,173 +121,108 @@ const seed = async (): Promise<void> => {
     ]);
     console.log('Cleared existing data');
 
-    const hashedUsers = await Promise.all(
-      demoUsers.map(async (user) => ({
+    // 1. Seed Bareilly College Users (Only 2)
+    const hashedBcUsers = await Promise.all(
+      bcUsers.map(async (user) => ({
         ...user,
         password: await hashPassword(user.password),
         isActive: getDefaultIsActiveForRole(user.role),
       }))
     );
+    const createdBcUsers = await User.insertMany(hashedBcUsers);
+    console.log(`Created ${createdBcUsers.length} Bareilly College users`);
 
-    const createdUsers = await User.insertMany(hashedUsers);
-    console.log(`Created ${createdUsers.length} users`);
+    // 2. Seed Test College Users
+    const hashedTcUsers = await Promise.all(
+      tcUsers.map(async (user) => ({
+        ...user,
+        password: await hashPassword(user.password),
+        isActive: getDefaultIsActiveForRole(user.role),
+      }))
+    );
+    const createdTcUsers = await User.insertMany(hashedTcUsers);
+    console.log(`Created ${createdTcUsers.length} Test College users`);
 
-    const [developer, hod, teacher, alice, bob, carol] = createdUsers;
+    const [tcDeveloper, tcHod, tcTeacher, tcAlice, tcBob, tcCarol] = createdTcUsers;
 
+    // 3. Seed demo Posts strictly in Test College
     await Post.insertMany([
       {
-        author: alice._id,
-        content: 'Just finished my final year project on campus networking! Excited to share it with everyone. #webdev #college',
-        tags: ['webdev', 'college', 'project'],
-        likesCount: 5,
-        commentsCount: 2,
-        status: 'approved',
-        reviewedBy: hod._id,
-        reviewedAt: new Date(),
-      },
-      {
-        author: bob._id,
-        content: 'Looking for study partners for the upcoming ML exam. Anyone interested?',
-        tags: ['study', 'machinelearning'],
-        likesCount: 3,
-        commentsCount: 1,
-        status: 'approved',
-        reviewedBy: teacher._id,
-        reviewedAt: new Date(),
-      },
-      {
-        author: carol._id,
-        content: 'Happy to announce I can refer CS students for internships at Google! DM me your resume.',
-        tags: ['internship', 'referral', 'google'],
-        likesCount: 15,
-        commentsCount: 8,
-        status: 'approved',
-        reviewedBy: developer._id,
-        reviewedAt: new Date(),
-      },
-      {
-        author: alice._id,
-        content: 'Has anyone tried the new React 19 features? Would love to discuss!',
-        tags: ['react', 'frontend'],
-        likesCount: 0,
+        author: tcAlice._id,
+        content: 'Hello Test College community! Exploring new React 19 architecture features. #react19 #testcollege',
+        tags: ['react19', 'testcollege'],
+        likesCount: 2,
         commentsCount: 0,
-        status: 'pending',
+        status: 'approved',
+        reviewedBy: tcHod._id,
+        reviewedAt: new Date(),
+        college: 'Test College',
       },
       {
-        author: bob._id,
-        content: 'Sharing my notes on system design patterns - link in comments',
-        tags: ['systemdesign', 'notes'],
-        likesCount: 0,
+        author: tcBob._id,
+        content: 'Anyone preparing for the coding challenges in Test College?',
+        tags: ['challenges', 'testcollege'],
+        likesCount: 1,
         commentsCount: 0,
-        status: 'rejected',
-        reviewedBy: teacher._id,
+        status: 'approved',
+        reviewedBy: tcTeacher._id,
         reviewedAt: new Date(),
-        rejectionReason: 'Please add the actual link in the post content instead of comments',
+        college: 'Test College',
       },
     ]);
-    console.log('Created demo posts');
 
+    // 4. Seed demo Opportunities strictly in Test College
     await Opportunity.insertMany([
       {
-        title: 'Software Engineering Intern',
-        description: 'Summer internship program for CS students. Work on real products with mentorship.',
-        company: 'Google',
+        title: 'Product Design Intern',
+        description: 'Internship opportunity for Test College students to work on mobile UI/UX.',
+        company: 'Figma (TC Branch)',
         type: 'internship',
-        skills: ['Java', 'Python', 'Algorithms'],
-        applyLink: 'https://careers.google.com',
-        deadline: new Date('2026-08-01'),
-        postedBy: carol._id,
+        skills: ['UI/UX', 'Figma', 'Prototyping'],
+        applyLink: 'https://careers.figma.com',
+        deadline: new Date('2026-08-15'),
+        postedBy: tcCarol._id,
         status: 'approved',
-        reviewedBy: developer._id,
+        reviewedBy: tcDeveloper._id,
         reviewedAt: new Date(),
-      },
-      {
-        title: 'Full Stack Developer',
-        description: 'Join our startup as a full stack developer. Remote-friendly.',
-        company: 'TechStartup Inc',
-        type: 'job',
-        skills: ['React', 'Node.js', 'MongoDB'],
-        applyLink: 'https://techstartup.com/careers',
-        deadline: new Date('2026-07-15'),
-        postedBy: developer._id,
-        status: 'approved',
-      },
-      {
-        title: 'Hackathon 2026',
-        description: 'Annual campus hackathon. 48 hours, amazing prizes!',
-        company: 'CampusConnect',
-        type: 'hackathon',
-        skills: ['Any'],
-        applyLink: 'https://campusconnect.edu/hackathon',
-        deadline: new Date('2026-09-01'),
-        postedBy: hod._id,
-        status: 'approved',
-      },
-      {
-        title: 'Data Science Intern - Pending Review',
-        description: 'Exciting opportunity for students interested in data science.',
-        company: 'DataCorp',
-        type: 'internship',
-        skills: ['Python', 'SQL', 'Pandas'],
-        applyLink: 'https://datacorp.com/intern',
-        deadline: new Date('2026-09-15'),
-        postedBy: alice._id,
-        status: 'pending',
+        college: 'Test College',
       },
     ]);
-    console.log('Created demo opportunities');
 
+    // 5. Seed demo Events strictly in Test College
     await Event.insertMany([
       {
-        title: 'Tech Talk: Future of AI',
-        description: 'Industry expert talk on AI trends and career opportunities.',
-        location: 'Auditorium A, Main Building',
-        eventDate: new Date('2026-07-20T14:00:00Z'),
-        organizer: teacher._id,
-        interestedCount: 25,
-        goingCount: 40,
+        title: 'Mobile App Workshop at Test College',
+        description: 'Hands-on Flutter and mobile development workshop organized at Test College.',
+        location: 'Lab 4, Computer Science Block',
+        eventDate: new Date('2026-08-10T09:00:00Z'),
+        organizer: tcTeacher._id,
+        interestedCount: 15,
+        goingCount: 20,
         status: 'approved',
-      },
-      {
-        title: 'Alumni Meetup 2026',
-        description: 'Annual alumni reunion and networking event.',
-        location: 'Campus Grounds',
-        eventDate: new Date('2026-08-15T10:00:00Z'),
-        organizer: hod._id,
-        interestedCount: 50,
-        goingCount: 30,
-        status: 'approved',
-      },
-      {
-        title: 'Study Group Meetup',
-        description: 'Weekly study group for ML enthusiasts. Bring your laptops!',
-        location: 'Library Room 3B',
-        eventDate: new Date('2026-07-25T16:00:00Z'),
-        organizer: bob._id,
-        interestedCount: 0,
-        goingCount: 0,
-        status: 'pending',
+        college: 'Test College',
       },
     ]);
-    console.log('Created demo events');
 
+    // 6. Seed connections for Test College
     await Connection.insertMany([
       {
-        sender: alice._id,
-        receiver: bob._id,
+        sender: tcAlice._id,
+        receiver: tcBob._id,
         status: 'accepted',
       },
-      {
-        sender: bob._id,
-        receiver: carol._id,
-        status: 'pending',
-      },
     ]);
-    console.log('Created demo connections');
+
+    console.log('Created raw demo posts, opportunities, events, and connections for Test College.');
+    console.log('Bareilly College remains clean and empty (only contains the 2 specific accounts).');
 
     console.log('\n--- Seed completed successfully ---');
-    console.log('\nDemo credentials:');
-    demoUsers.forEach((u) => {
+    console.log('\nBareilly College Credentials:');
+    bcUsers.forEach((u) => {
+      console.log(`  ${u.role.padEnd(8)} | ${u.email} | ${u.password}`);
+    });
+    console.log('\nTest College Credentials:');
+    tcUsers.forEach((u) => {
       console.log(`  ${u.role.padEnd(8)} | ${u.email} | ${u.password}`);
     });
 

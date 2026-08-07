@@ -174,6 +174,9 @@ export class UserManagementService {
 
   async deleteUser(actorId: string, targetId: string): Promise<void> {
     const actor = await this.getActor(actorId);
+    if (actor.college === 'Test College') {
+      throw new AppError('Deletion of users is disabled for Test College accounts', 403);
+    }
     const target = await this.getTarget(targetId);
     assertCanManageUser(actor, target);
 
@@ -281,6 +284,10 @@ export class DeveloperService {
   }
 
   async deleteUser(userId: string, actorId: string, actorRole: UserRole): Promise<void> {
+    const actor = await userRepository.findById(actorId);
+    if (actor?.college === 'Test College') {
+      throw new AppError('Deletion of users is disabled for Test College accounts', 403);
+    }
     if (userId === actorId) {
       throw new AppError('You cannot delete yourself', 400);
     }
