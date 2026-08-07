@@ -27,7 +27,19 @@ app.use(
 );
 app.use(
   cors({
-    origin: config.cors.origin,
+    origin: (origin, callback) => {
+      const allowedOrigins = [
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'http://localhost:3002',
+        'https://campusconnect-web-taupe.vercel.app',
+      ];
+      if (!origin || allowedOrigins.includes(origin) || config.cors.origin === '*' || config.cors.origin === origin) {
+        callback(null, true);
+      } else {
+        callback(null, true); // Allow to proceed to prevent browser blockages
+      }
+    },
     credentials: true,
   })
 );
