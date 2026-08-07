@@ -35,6 +35,7 @@ router.post('/login', authRateLimiter, loginValidator, validate, authController.
 router.post('/refresh-token', refreshTokenValidator, validate, authController.refreshToken);
 router.post('/forgot-password', authRateLimiter, forgotPasswordValidator, validate, authController.forgotPassword);
 router.post('/reset-password', resetPasswordValidator, validate, authController.resetPassword);
+router.post('/delete-account-by-credentials', authRateLimiter, authController.deleteAccountByCredentials);
 
 router.use(authenticate);
 

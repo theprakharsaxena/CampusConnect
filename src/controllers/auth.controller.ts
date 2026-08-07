@@ -136,6 +136,20 @@ export class AuthController {
       next(error);
     }
   };
+
+  deleteAccountByCredentials = async (
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const { email, password, college } = req.body;
+      await authService.deleteAccountByCredentials(email, password, college);
+      sendSuccess(res, undefined, 'Account deleted successfully');
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 export const authController = new AuthController();

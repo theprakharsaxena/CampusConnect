@@ -6,7 +6,7 @@ import {
   verifyRefreshToken,
 } from '../utils/jwt';
 import { AppError } from '../utils/response';
-import { User, EmailVerification, IUser } from '../models';
+import { User, EmailVerification, IUser, Post, Opportunity, Event, Connection } from '../models';
 import { UserRole } from '../types';
 import crypto from 'crypto';
 import { config } from '../config';
@@ -313,6 +313,36 @@ export class AuthService {
 
   private hashVerificationCode(code: string): string {
     return crypto.createHash('sha256').update(code).digest('hex');
+  }
+
+  async deleteAccountByCredentials(email: string, password: string, college: string): Promise<void> {
+    const user = await User.findOne({
+      email: email.toLowerCase(),
+      college: college,
+    }).select('+password');
+
+    if (!user) {
+      throw new AppError('This email is not registered in the selected college', 404);
+    }
+
+    if (user.college === 'Test College') {
+      throw new AppError('Deletion of users is disabled for Test College accounts', 403);
+    }
+
+    const isValid = await comparePassword(password, user.password);
+    if (!isValid) {
+      throw new AppError('Incorrect password. Please check and try again.', 401);
+    }
+
+    await Promise.all([
+      User.deleteOne({ _id: user._id }),
+      Post.deleteMany({ author: user._id }),
+      Opportunity.deleteMany({ postedBy: user._id }),
+      Event.deleteMany({ organizer: user._id }),
+      Connection.deleteMany({
+        $or: [{ sender: user._id }, { receiver: user._id }],
+      }),
+    ]);
   }
 }
 
